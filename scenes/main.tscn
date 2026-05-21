@@ -1,0 +1,138 @@
+[gd_scene load_steps=5 format=3 uid="uid://cmainpin01"]
+
+[ext_resource type="Script" path="res://scripts/game_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/chunk_generator.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/vertical_camera.gd" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ball.tscn" id="4"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1")
+ball_scene = ExtResource("4")
+
+[node name="World" type="Node2D" parent="."]
+process_mode = 1
+
+[node name="ChunkGenerator" type="Node" parent="."]
+process_mode = 1
+script = ExtResource("2")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+process_mode = 1
+position = Vector2(320, 200)
+limit_left = -120
+limit_right = 760
+limit_top = -3000
+limit_bottom = 60000
+script = ExtResource("3")
+arena_center_x = 320.0
+smoothing_speed = 12.0
+look_ahead = 0.22
+max_look_ahead_px = 140.0
+max_catchup_distance = 360.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Vignette" type="ColorRect" parent="CanvasLayer"]
+mouse_filter = 2
+offset_right = 640.0
+offset_bottom = 720.0
+color = Color(0.85, 0.1, 0.15, 1)
+modulate = Color(1, 1, 1, 0)
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer"]
+offset_left = 0.0
+offset_top = 8.0
+offset_right = 640.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.98, 0.94, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 26
+text = "PIN DOWN"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="CanvasLayer"]
+offset_left = 0.0
+offset_top = 44.0
+offset_right = 640.0
+offset_bottom = 76.0
+theme_override_colors/font_color = Color(0.88, 0.92, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "[Space] / [LMB] Flippers   [R] Restart   [Esc] Pause"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DepthLabel" type="Label" parent="CanvasLayer"]
+offset_left = 0.0
+offset_top = 80.0
+offset_right = 640.0
+offset_bottom = 104.0
+theme_override_colors/font_color = Color(0.95, 1.0, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "DEPTH 0%   RUN 1   DEATHS 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DepthBarBg" type="ColorRect" parent="CanvasLayer"]
+offset_left = 220.0
+offset_top = 106.0
+offset_right = 420.0
+offset_bottom = 114.0
+color = Color(0.15, 0.17, 0.25, 0.85)
+
+[node name="DepthBarFill" type="ColorRect" parent="CanvasLayer"]
+offset_left = 220.0
+offset_top = 106.0
+offset_right = 220.0
+offset_bottom = 114.0
+color = Color(0.95, 0.78, 0.25, 0.95)
+
+[node name="CenterMessage" type="Label" parent="CanvasLayer"]
+offset_left = 0.0
+offset_top = 280.0
+offset_right = 640.0
+offset_bottom = 440.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 38
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="PauseLabel" type="Label" parent="CanvasLayer"]
+process_mode = 3
+offset_left = 0.0
+offset_top = 320.0
+offset_right = 640.0
+offset_bottom = 400.0
+theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 42
+text = "— PAUSED —"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SfxFlip" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxHit" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxDeath" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxWin" type="AudioStreamPlayer" parent="."]
+bus = "Master"

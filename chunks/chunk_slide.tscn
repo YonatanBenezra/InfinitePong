@@ -1,0 +1,52 @@
+[gd_scene load_steps=3 format=3 uid="uid://cchunkslide"]
+
+[sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
+size = Vector2(64, 380)
+
+[sub_resource type="RectangleShape2D" id="Rect_nub"]
+size = Vector2(130, 18)
+
+[node name="ChunkSlide" type="Node2D"]
+
+[node name="ConnectTop" type="Marker2D" parent="."]
+position = Vector2(320, 0)
+
+[node name="ConnectBottom" type="Marker2D" parent="."]
+position = Vector2(320, 320)
+
+[node name="BallSpawn" type="Marker2D" parent="."]
+position = Vector2(320, 48)
+
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(40, 160)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(600, 160)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="NubLeft" type="StaticBody2D" parent="."]
+position = Vector2(200, 130)
+rotation = 0.32
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NubLeft"]
+shape = SubResource("Rect_nub")
+
+[node name="NubRight" type="StaticBody2D" parent="."]
+position = Vector2(450, 220)
+rotation = -0.32
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NubRight"]
+shape = SubResource("Rect_nub")

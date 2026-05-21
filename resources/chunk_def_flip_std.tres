@@ -1,0 +1,10 @@
+[gd_resource type="Resource" load_steps=3 format=3 uid="uid://cdeffstd1"]
+
+[ext_resource type="Script" path="res://scripts/chunk_definition.gd" id="1"]
+[ext_resource type="PackedScene" path="res://chunks/chunk_flip_std.tscn" id="2"]
+
+[resource]
+script = ExtResource("1")
+scene = ExtResource("2")
+difficulty = 2
+weight = 1.2

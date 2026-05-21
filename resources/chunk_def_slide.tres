@@ -1,0 +1,10 @@
+[gd_resource type="Resource" load_steps=3 format=3 uid="uid://cdefslide1"]
+
+[ext_resource type="Script" path="res://scripts/chunk_definition.gd" id="1"]
+[ext_resource type="PackedScene" path="res://chunks/chunk_slide.tscn" id="2"]
+
+[resource]
+script = ExtResource("1")
+scene = ExtResource("2")
+difficulty = 1
+weight = 1.4

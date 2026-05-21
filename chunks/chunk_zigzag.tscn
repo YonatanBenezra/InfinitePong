@@ -1,0 +1,61 @@
+[gd_scene format=3 uid="uid://cchunk0g0g"]
+
+[sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
+size = Vector2(56, 480)
+
+[sub_resource type="RectangleShape2D" id="Rect_shelf"]
+size = Vector2(240, 18)
+
+[node name="ChunkZigzag" type="Node2D"]
+
+[node name="ConnectTop" type="Marker2D" parent="."]
+position = Vector2(320, 0)
+
+[node name="ConnectBottom" type="Marker2D" parent="."]
+position = Vector2(320, 480)
+
+[node name="BallSpawn" type="Marker2D" parent="."]
+position = Vector2(320, 48)
+
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(36, 240)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(604, 240)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="ShelfA" type="StaticBody2D" parent="."]
+position = Vector2(200, 130)
+rotation = 0.18
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShelfA"]
+shape = SubResource("Rect_shelf")
+
+[node name="ShelfB" type="StaticBody2D" parent="."]
+position = Vector2(440, 260)
+rotation = -0.18
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShelfB"]
+shape = SubResource("Rect_shelf")
+
+[node name="ShelfC" type="StaticBody2D" parent="."]
+position = Vector2(200, 380)
+rotation = 0.18
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShelfC"]
+shape = SubResource("Rect_shelf")

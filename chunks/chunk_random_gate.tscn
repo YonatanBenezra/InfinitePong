@@ -1,0 +1,71 @@
+[gd_scene load_steps=5 format=3 uid="uid://cchunkrndg"]
+
+[ext_resource type="PackedScene" path="res://scenes/hazard_spike.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/chunk_randomizer.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="Rect_wall"]
+size = Vector2(60, 340)
+
+[sub_resource type="RectangleShape2D" id="Rect_diag"]
+size = Vector2(180, 16)
+
+[node name="ChunkRandomGate" type="Node2D"]
+
+[node name="ConnectTop" type="Marker2D" parent="."]
+position = Vector2(320, 0)
+
+[node name="ConnectBottom" type="Marker2D" parent="."]
+position = Vector2(320, 320)
+
+[node name="BallSpawn" type="Marker2D" parent="."]
+position = Vector2(320, 48)
+
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(40, 160)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+shape = SubResource("Rect_wall")
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(600, 160)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+shape = SubResource("Rect_wall")
+
+[node name="Randomizer" type="Node" parent="."]
+script = ExtResource("2")
+spawn_chance = 0.5
+variant_a_path = NodePath("../VariantHard")
+variant_b_path = NodePath("../VariantSoft")
+
+[node name="VariantHard" type="Node2D" parent="."]
+
+[node name="HazardSpikeA" parent="VariantHard" instance=ExtResource("1")]
+position = Vector2(210, 200)
+
+[node name="HazardSpikeB" parent="VariantHard" instance=ExtResource("1")]
+position = Vector2(430, 200)
+
+[node name="VariantSoft" type="Node2D" parent="."]
+
+[node name="DiagLeft" type="StaticBody2D" parent="VariantSoft"]
+position = Vector2(220, 180)
+rotation = 0.42
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VariantSoft/DiagLeft"]
+shape = SubResource("Rect_diag")
+
+[node name="DiagRight" type="StaticBody2D" parent="VariantSoft"]
+position = Vector2(420, 230)
+rotation = -0.42
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VariantSoft/DiagRight"]
+shape = SubResource("Rect_diag")
