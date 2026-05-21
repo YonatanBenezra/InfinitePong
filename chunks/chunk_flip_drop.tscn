@@ -1,0 +1,79 @@
+[gd_scene load_steps=5 format=3 uid="uid://cchunkdrop1"]
+
+[ext_resource type="PackedScene" path="res://scenes/flipper_flat.tscn" id="1"]
+
+[sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
+size = Vector2(64, 420)
+
+[sub_resource type="RectangleShape2D" id="Rect_lip"]
+size = Vector2(90, 18)
+
+[sub_resource type="RectangleShape2D" id="Rect_diag"]
+size = Vector2(120, 16)
+
+[node name="ChunkFlipDrop" type="Node2D"]
+
+[node name="ConnectTop" type="Marker2D" parent="."]
+position = Vector2(320, 0)
+
+[node name="ConnectBottom" type="Marker2D" parent="."]
+position = Vector2(320, 400)
+
+[node name="BallSpawn" type="Marker2D" parent="."]
+position = Vector2(320, 48)
+
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(40, 200)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(600, 200)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="ChuteLeft" type="StaticBody2D" parent="."]
+position = Vector2(190, 100)
+rotation = 0.45
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ChuteLeft"]
+shape = SubResource("Rect_diag")
+
+[node name="ChuteRight" type="StaticBody2D" parent="."]
+position = Vector2(450, 100)
+rotation = -0.45
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ChuteRight"]
+shape = SubResource("Rect_diag")
+
+[node name="LipLeft" type="StaticBody2D" parent="."]
+position = Vector2(170, 240)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LipLeft"]
+shape = SubResource("Rect_lip")
+
+[node name="LipRight" type="StaticBody2D" parent="."]
+position = Vector2(470, 240)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LipRight"]
+shape = SubResource("Rect_lip")
+
+[node name="PopFlipper" parent="." instance=ExtResource("1")]
+position = Vector2(320, 290)
+active_offset = Vector2(0, -110)
+move_speed = 3200.0
+kick_impulse = 950.0

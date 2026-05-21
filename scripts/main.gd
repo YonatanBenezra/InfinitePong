@@ -3,7 +3,7 @@ extends Node2D
 
 enum State { PLAYING, DEAD, TRANSITION }
 
-@onready var ball: PinBall = $Ball
+@onready var ball: RigidBody2D = $Ball
 @onready var camera: PinCamera = $Camera2D
 @onready var level_generator: LevelGenerator = $LevelGenerator
 @onready var audio: AudioManager = $AudioManager
@@ -78,10 +78,7 @@ func _connect_exit() -> void:
 
 func _connect_flipper_audio() -> void:
 	for node in $LevelRoot.find_children("*"):
-		if node is StandardFlipper:
-			if not node.flipper_hit.is_connected(audio.play_flipper):
-				node.flipper_hit.connect(audio.play_flipper)
-		elif node is FlatFlipper:
+		if node.is_in_group("player_flippers") and node.has_signal("flipper_hit"):
 			if not node.flipper_hit.is_connected(audio.play_flipper):
 				node.flipper_hit.connect(audio.play_flipper)
 

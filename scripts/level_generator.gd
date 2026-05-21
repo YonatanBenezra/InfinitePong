@@ -109,8 +109,8 @@ func _pick_chunk(remaining: int, force_any: bool) -> ChunkDefinition:
 func _randomize_chunk(chunk: Node2D) -> void:
 	for node in _find_in_group(chunk, "hazard_random"):
 		node.visible = randf() > 0.5
-		if node is SpikeHazard:
-			var spike := node as SpikeHazard
+		if node is Area2D:
+			var spike := node as Area2D
 			spike.monitoring = node.visible
 			spike.monitorable = node.visible
 

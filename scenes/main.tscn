@@ -1,132 +1,138 @@
-[gd_scene load_steps=7 format=3 uid="uid://pin_down_main"]
+[gd_scene load_steps=5 format=3 uid="uid://cmainpin01"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
-[ext_resource type="Script" path="res://scripts/camera_controller.gd" id="2_cam"]
-[ext_resource type="Script" path="res://scripts/level_generator.gd" id="3_gen"]
-[ext_resource type="Script" path="res://scripts/audio_manager.gd" id="4_audio"]
-[ext_resource type="PackedScene" uid="uid://pin_ball" path="res://scenes/ball.tscn" id="5_ball"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
-size = Vector2(20, 800)
+[ext_resource type="Script" path="res://scripts/game_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/chunk_generator.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/vertical_camera.gd" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ball.tscn" id="4"]
 
 [node name="Main" type="Node2D"]
-script = ExtResource("1_main")
+script = ExtResource("1")
+ball_scene = ExtResource("4")
 
-[node name="Background" type="Polygon2D" parent="."]
-z_index = -10
-color = Color(0.06, 0.07, 0.12, 1)
-polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 6000, 0, 6000)
+[node name="World" type="Node2D" parent="."]
+process_mode = 1
 
-[node name="LevelRoot" type="Node2D" parent="."]
-
-[node name="LaneVisuals" type="Node2D" parent="."]
-
-[node name="LaneLeft" type="Line2D" parent="LaneVisuals"]
-position = Vector2(320, 0)
-width = 3.0
-default_color = Color(0.35, 0.4, 0.55, 0.6)
-points = PackedVector2Array(0, 0, 0, 800)
-
-[node name="LaneRight" type="Line2D" parent="LaneVisuals"]
-position = Vector2(832, 0)
-width = 3.0
-default_color = Color(0.35, 0.4, 0.55, 0.6)
-points = PackedVector2Array(0, 0, 0, 800)
-
-[node name="Walls" type="Node2D" parent="."]
-
-[node name="WallLeft" type="StaticBody2D" parent="Walls"]
-position = Vector2(320, 400)
-collision_layer = 2
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft"]
-shape = SubResource("RectangleShape2D_wall")
-
-[node name="WallRight" type="StaticBody2D" parent="Walls"]
-position = Vector2(832, 400)
-collision_layer = 2
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallRight"]
-shape = SubResource("RectangleShape2D_wall")
-
-[node name="Ball" parent="." instance=ExtResource("5_ball")]
-position = Vector2(576, 80)
+[node name="ChunkGenerator" type="Node" parent="."]
+process_mode = 1
+script = ExtResource("2")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(576, 324)
-script = ExtResource("2_cam")
+process_mode = 1
+position = Vector2(320, 200)
+limit_left = -120
+limit_right = 760
+limit_top = -3000
+limit_bottom = 60000
+script = ExtResource("3")
+arena_center_x = 320.0
+smoothing_speed = 12.0
+look_ahead = 0.22
+max_look_ahead_px = 140.0
+max_catchup_distance = 360.0
 
-[node name="LevelGenerator" type="Node" parent="."]
-script = ExtResource("3_gen")
-min_chunks = 3
-max_chunks = 6
-difficulty_budget = 14
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
-[node name="AudioManager" type="Node" parent="."]
-script = ExtResource("4_audio")
+[node name="Vignette" type="ColorRect" parent="CanvasLayer"]
+mouse_filter = 2
+offset_right = 640.0
+offset_bottom = 720.0
+color = Color(0.85, 0.1, 0.15, 1)
+modulate = Color(1, 1, 1, 0)
 
-[node name="FlipperPlayer" type="AudioStreamPlayer" parent="AudioManager"]
-
-[node name="ImpactPlayer" type="AudioStreamPlayer" parent="AudioManager"]
-
-[node name="DeathPlayer" type="AudioStreamPlayer" parent="AudioManager"]
-
-[node name="CompletePlayer" type="AudioStreamPlayer" parent="AudioManager"]
-
-[node name="UI" type="CanvasLayer" parent="."]
-
-[node name="StatusLabel" type="Label" parent="UI"]
-offset_left = 20.0
-offset_top = 16.0
-offset_right = 800.0
+[node name="TitleLabel" type="Label" parent="CanvasLayer"]
+offset_left = 0.0
+offset_top = 8.0
+offset_right = 640.0
 offset_bottom = 44.0
-theme_override_colors/font_color = Color(0.92, 0.92, 0.96, 1)
-theme_override_font_sizes/font_size = 20
-text = "Pin Down"
-
-[node name="HintLabel" type="Label" parent="UI"]
-offset_left = 20.0
-offset_top = 44.0
-offset_right = 800.0
-offset_bottom = 68.0
-theme_override_colors/font_color = Color(0.7, 0.72, 0.8, 1)
-theme_override_font_sizes/font_size = 14
-text = "Descend to the gold EXIT gate. Avoid red spikes."
-
-[node name="DepthLabel" type="Label" parent="UI"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -160.0
-offset_top = 16.0
-offset_right = -20.0
-offset_bottom = 44.0
-grow_horizontal = 0
-theme_override_colors/font_color = Color(0.75, 0.78, 0.9, 1)
-theme_override_font_sizes/font_size = 16
-text = "Depth: 0%"
-horizontal_alignment = 2
-
-[node name="Overlay" type="PanelContainer" parent="UI"]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -60.0
-offset_right = 220.0
-offset_bottom = 60.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="VBox" type="VBoxContainer" parent="UI/Overlay"]
-layout_mode = 2
-
-[node name="Message" type="Label" parent="UI/Overlay/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "Game Over"
+theme_override_colors/font_color = Color(0.98, 0.94, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 26
+text = "PIN DOWN"
 horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="CanvasLayer"]
+offset_left = 0.0
+offset_top = 44.0
+offset_right = 640.0
+offset_bottom = 76.0
+theme_override_colors/font_color = Color(0.88, 0.92, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "[Space] / [LMB] Flippers   [R] Restart   [Esc] Pause"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DepthLabel" type="Label" parent="CanvasLayer"]
+offset_left = 0.0
+offset_top = 80.0
+offset_right = 640.0
+offset_bottom = 104.0
+theme_override_colors/font_color = Color(0.95, 1.0, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "DEPTH 0%   RUN 1   DEATHS 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DepthBarBg" type="ColorRect" parent="CanvasLayer"]
+offset_left = 220.0
+offset_top = 106.0
+offset_right = 420.0
+offset_bottom = 114.0
+color = Color(0.15, 0.17, 0.25, 0.85)
+
+[node name="DepthBarFill" type="ColorRect" parent="CanvasLayer"]
+offset_left = 220.0
+offset_top = 106.0
+offset_right = 220.0
+offset_bottom = 114.0
+color = Color(0.95, 0.78, 0.25, 0.95)
+
+[node name="CenterMessage" type="Label" parent="CanvasLayer"]
+offset_left = 0.0
+offset_top = 280.0
+offset_right = 640.0
+offset_bottom = 440.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 38
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="PauseLabel" type="Label" parent="CanvasLayer"]
+process_mode = 3
+offset_left = 0.0
+offset_top = 320.0
+offset_right = 640.0
+offset_bottom = 400.0
+theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 42
+text = "— PAUSED —"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SfxFlip" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxHit" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxDeath" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxWin" type="AudioStreamPlayer" parent="."]
+bus = "Master"

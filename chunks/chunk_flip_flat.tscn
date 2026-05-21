@@ -1,0 +1,57 @@
+[gd_scene load_steps=5 format=3 uid="uid://cchunkfflt"]
+
+[ext_resource type="PackedScene" path="res://scenes/flipper_flat.tscn" id="1"]
+
+[sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
+size = Vector2(64, 440)
+
+[sub_resource type="RectangleShape2D" id="Rect_ledge_side"]
+size = Vector2(130, 22)
+
+[node name="ChunkFlipFlat" type="Node2D"]
+
+[node name="ConnectTop" type="Marker2D" parent="."]
+position = Vector2(320, 0)
+
+[node name="ConnectBottom" type="Marker2D" parent="."]
+position = Vector2(320, 400)
+
+[node name="BallSpawn" type="Marker2D" parent="."]
+position = Vector2(320, 48)
+
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(40, 200)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(600, 200)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="LedgeLeft" type="StaticBody2D" parent="."]
+position = Vector2(155, 130)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LedgeLeft"]
+shape = SubResource("Rect_ledge_side")
+
+[node name="LedgeRight" type="StaticBody2D" parent="."]
+position = Vector2(485, 130)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LedgeRight"]
+shape = SubResource("Rect_ledge_side")
+
+[node name="FlipperFlat" parent="." instance=ExtResource("1")]
+position = Vector2(320, 290)
+active_offset = Vector2(0, -80)
+move_speed = 2400.0

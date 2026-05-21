@@ -1,0 +1,108 @@
+[gd_scene format=3 uid="uid://cchunkcor1"]
+
+[ext_resource type="PackedScene" path="res://scenes/hazard_spike.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/chunk_randomizer.gd" id="2"]
+
+[sub_resource type="RectangleShape2D" id="Rect_outer_wall"]
+size = Vector2(48, 560)
+
+[sub_resource type="RectangleShape2D" id="Rect_inner_wall"]
+size = Vector2(40, 320)
+
+[sub_resource type="RectangleShape2D" id="Rect_diag"]
+size = Vector2(110, 16)
+
+[node name="ChunkCorridor" type="Node2D"]
+
+[node name="ConnectTop" type="Marker2D" parent="."]
+position = Vector2(320, 0)
+
+[node name="ConnectBottom" type="Marker2D" parent="."]
+position = Vector2(320, 540)
+
+[node name="BallSpawn" type="Marker2D" parent="."]
+position = Vector2(320, 48)
+
+[node name="OuterWallLeft" type="StaticBody2D" parent="."]
+position = Vector2(36, 280)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OuterWallLeft"]
+shape = SubResource("Rect_outer_wall")
+
+[node name="OuterWallRight" type="StaticBody2D" parent="."]
+position = Vector2(604, 280)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="OuterWallRight"]
+shape = SubResource("Rect_outer_wall")
+
+[node name="InnerWallLeft" type="StaticBody2D" parent="."]
+position = Vector2(180, 320)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InnerWallLeft"]
+shape = SubResource("Rect_inner_wall")
+
+[node name="InnerWallRight" type="StaticBody2D" parent="."]
+position = Vector2(460, 320)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InnerWallRight"]
+shape = SubResource("Rect_inner_wall")
+
+[node name="EntryLeft" type="StaticBody2D" parent="."]
+position = Vector2(245, 130)
+rotation = 0.5
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EntryLeft"]
+shape = SubResource("Rect_diag")
+
+[node name="EntryRight" type="StaticBody2D" parent="."]
+position = Vector2(395, 130)
+rotation = -0.5
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EntryRight"]
+shape = SubResource("Rect_diag")
+
+[node name="Randomizer" type="Node" parent="."]
+script = ExtResource("2")
+spawn_chance = 0.5
+variant_a_path = NodePath("../VariantLeftHeavy")
+variant_b_path = NodePath("../VariantRightHeavy")
+
+[node name="VariantLeftHeavy" type="Node2D" parent="."]
+
+[node name="SpikeL1" parent="VariantLeftHeavy" instance=ExtResource("1")]
+position = Vector2(220, 230)
+
+[node name="SpikeL2" parent="VariantLeftHeavy" instance=ExtResource("1")]
+position = Vector2(220, 330)
+
+[node name="SpikeL3" parent="VariantLeftHeavy" instance=ExtResource("1")]
+position = Vector2(220, 430)
+
+[node name="SpikeR1" parent="VariantLeftHeavy" instance=ExtResource("1")]
+position = Vector2(420, 360)
+
+[node name="VariantRightHeavy" type="Node2D" parent="."]
+
+[node name="SpikeR1" parent="VariantRightHeavy" instance=ExtResource("1")]
+position = Vector2(420, 230)
+
+[node name="SpikeR2" parent="VariantRightHeavy" instance=ExtResource("1")]
+position = Vector2(420, 330)
+
+[node name="SpikeR3" parent="VariantRightHeavy" instance=ExtResource("1")]
+position = Vector2(420, 430)
+
+[node name="SpikeL1" parent="VariantRightHeavy" instance=ExtResource("1")]
+position = Vector2(220, 360)
