@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-min_chunks = 12
-max_chunks = 16
-target_difficulty_budget = 30
+min_chunks = 10
+max_chunks = 14
+target_difficulty_budget = 24
 max_pick_attempts_per_slot = 64

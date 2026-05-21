@@ -7,4 +7,4 @@
 script = ExtResource("1")
 scene = ExtResource("2")
 difficulty = 5
-weight = 0.85
+weight = 0.65
