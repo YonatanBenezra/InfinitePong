@@ -1,0 +1,8 @@
+res://scripts/ball.gd
+res://scripts/main.gd
+res://scripts/paddle.gd
+res://scripts/camera_controller.gd
+res://scripts/flipper_flat.gd
+res://scripts/flipper_standard.gd
+res://scripts/hazard_spike.gd
+res://scripts/level_generator.gd

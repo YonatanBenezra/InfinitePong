@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ChunkDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/chunk_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" uid="uid://chunk_hard" path="res://scenes/chunks/chunk_hard.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_def")
+scene = ExtResource("2_scene")
+difficulty = 5
+display_name = "Hard"
