@@ -136,3 +136,9 @@ bus = "Master"
 
 [node name="SfxWin" type="AudioStreamPlayer" parent="."]
 bus = "Master"
+
+[node name="SfxHazard" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxRicochet" type="AudioStreamPlayer" parent="."]
+bus = "Master"

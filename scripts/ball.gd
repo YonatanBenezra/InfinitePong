@@ -15,6 +15,9 @@ extends RigidBody2D
 @export var ball_glow_color: Color = Color(1.0, 0.85, 0.35, 0.5)
 @export var outline_color: Color = Color(0.1, 0.12, 0.22)
 @export var hit_cooldown: float = 0.05
+## Above this speed at the moment of impact, the contact is treated as a
+## ricochet (distinct audio cue) rather than a generic thud.
+@export var ricochet_speed_threshold: float = 720.0
 @export var trail_length: int = 14
 @export var trail_color: Color = Color(1.0, 0.9, 0.45, 0.55)
 @export var spawn_impulse: Vector2 = Vector2(0, 120)
@@ -74,7 +77,11 @@ func _on_body_entered(_body: Node) -> void:
 	if now - _last_hit_time < hit_cooldown:
 		return
 	_last_hit_time = now
-	GameEvents.ball_hit.emit(linear_velocity.length())
+	var speed := linear_velocity.length()
+	if speed >= ricochet_speed_threshold:
+		GameEvents.ball_ricochet.emit(speed)
+	else:
+		GameEvents.ball_hit.emit(speed)
 
 
 func _draw() -> void:

@@ -29,6 +29,8 @@ extends Node2D
 @onready var _sfx_hit: AudioStreamPlayer = $SfxHit
 @onready var _sfx_death: AudioStreamPlayer = $SfxDeath
 @onready var _sfx_win: AudioStreamPlayer = $SfxWin
+@onready var _sfx_hazard: AudioStreamPlayer = $SfxHazard
+@onready var _sfx_ricochet: AudioStreamPlayer = $SfxRicochet
 
 var _ball: RigidBody2D
 var _generator: ChunkGenerator
@@ -49,7 +51,9 @@ func _ready() -> void:
 	GameEvents.player_died.connect(_on_player_died)
 	GameEvents.level_completed.connect(_on_level_completed)
 	GameEvents.ball_hit.connect(_on_ball_hit)
+	GameEvents.ball_ricochet.connect(_on_ball_ricochet)
 	GameEvents.flipper_fired.connect(_on_flipper_fired)
+	GameEvents.hazard_hit.connect(_on_hazard_hit)
 	_pause_label.visible = false
 	_center.visible = false
 	if _vignette:
@@ -76,6 +80,12 @@ func _setup_audio() -> void:
 	if _sfx_win:
 		_sfx_win.stream = AudioSynth.win_sound()
 		_sfx_win.volume_db = -2.0
+	if _sfx_hazard:
+		_sfx_hazard.stream = AudioSynth.hazard_sound()
+		_sfx_hazard.volume_db = -5.0
+	if _sfx_ricochet:
+		_sfx_ricochet.stream = AudioSynth.ricochet_sound()
+		_sfx_ricochet.volume_db = -8.0
 
 
 func _process(delta: float) -> void:
@@ -211,6 +221,19 @@ func _on_ball_hit(speed: float) -> void:
 	# Shake scales with impact intensity.
 	var s := clampf((speed - 220.0) / 1400.0, 0.0, 1.0) * 6.0
 	_shake(s)
+
+
+func _on_ball_ricochet(speed: float) -> void:
+	# High-energy wall hit: distinct cue + a touch more shake.
+	_play_sfx(_sfx_ricochet)
+	var s := clampf((speed - 720.0) / 1200.0, 0.0, 1.0) * 8.0 + 2.0
+	_shake(s)
+
+
+func _on_hazard_hit() -> void:
+	# Plays slightly before the death wail so the player hears the
+	# "I touched a spike" cue distinctly from the "I died" cue.
+	_play_sfx(_sfx_hazard)
 
 
 func _on_flipper_fired() -> void:

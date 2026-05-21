@@ -15,6 +15,10 @@ class_name ChunkGenerator
 @export var chunk_pool: Array[ChunkDefinition] = []
 @export var start_chunk: ChunkDefinition
 @export var finale_chunk: ChunkDefinition
+## Optional biome filter. Empty = include every chunk regardless of its
+## biome tag. Set to e.g. &"factory" to restrict to chunks marked for that
+## biome (or chunks with no biome set, which act as universal).
+@export var active_biome: StringName = &""
 
 
 func _ensure_defaults() -> void:
@@ -30,6 +34,7 @@ func _ensure_defaults() -> void:
 			preload("res://resources/chunk_def_flip_std.tres"),
 			preload("res://resources/chunk_def_flip_flat.tres"),
 			preload("res://resources/chunk_def_flip_drop.tres"),
+			preload("res://resources/chunk_def_flip_inverted.tres"),
 			preload("res://resources/chunk_def_spikes_static.tres"),
 			preload("res://resources/chunk_def_spikes_moving.tres"),
 			preload("res://resources/chunk_def_gauntlet.tres"),
@@ -63,10 +68,12 @@ func _filter_fitting(pool: Array[ChunkDefinition], max_difficulty: int) -> Array
 	return out
 
 
-func _filter_max(pool: Array[ChunkDefinition], max_difficulty: int) -> Array[ChunkDefinition]:
+func _filter_biome(pool: Array[ChunkDefinition]) -> Array[ChunkDefinition]:
+	if active_biome == &"":
+		return pool
 	var out: Array[ChunkDefinition] = []
 	for c in pool:
-		if c.difficulty <= max_difficulty:
+		if c.matches_biome(active_biome):
 			out.append(c)
 	return out
 
@@ -100,6 +107,12 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) 
 	# First couple of mids on run 1 should be easy so player learns.
 	var easy_threshold: int = 2 if run_count == 1 else 0
 
+	# Pre-filter the pool by active biome once. Empty biome = pass everything.
+	var biome_pool := _filter_biome(chunk_pool)
+	if biome_pool.is_empty():
+		push_warning("ChunkGenerator: active_biome %s has no matching chunks; falling back to full pool" % active_biome)
+		biome_pool = chunk_pool
+
 	var sequence: Array[ChunkDefinition] = []
 	sequence.append(start_chunk)
 	remaining_budget -= start_chunk.difficulty
@@ -110,7 +123,7 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) 
 			max_diff_here = mini(remaining_budget, easy_threshold)
 		var picked: ChunkDefinition = null
 		for _attempt in config.max_pick_attempts_per_slot:
-			var candidate: ChunkDefinition = _pick_weighted(rng, chunk_pool)
+			var candidate: ChunkDefinition = _pick_weighted(rng, biome_pool)
 			if candidate.difficulty > max_diff_here:
 				continue
 			if last_def != null and candidate == last_def:
@@ -118,10 +131,10 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) 
 			picked = candidate
 			break
 		if picked == null:
-			var fitting := _filter_fitting(chunk_pool, max_diff_here)
+			var fitting := _filter_fitting(biome_pool, max_diff_here)
 			if fitting.is_empty():
-				var easiest: ChunkDefinition = chunk_pool[0]
-				for c in chunk_pool:
+				var easiest: ChunkDefinition = biome_pool[0]
+				for c in biome_pool:
 					if c.difficulty < easiest.difficulty:
 						easiest = c
 				picked = easiest
