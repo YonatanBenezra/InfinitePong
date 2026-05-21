@@ -78,6 +78,44 @@ static func death_sound() -> AudioStreamWAV:
 	return _pack(s)
 
 
+static func hazard_sound() -> AudioStreamWAV:
+	# Sharp, metallic stinger for spike contact — distinct from the longer
+	# death wail and the soft ball-impact thud. Short and bright.
+	var dur := 0.13
+	var n := int(dur * SR)
+	var s := PackedFloat32Array()
+	s.resize(n)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 9173
+	for i in n:
+		var t := float(i) / float(SR)
+		var u := t / dur
+		var env := pow(1.0 - u, 1.2) * (1.0 - exp(-u * 90.0))
+		var clang := sin(t * lerpf(1850.0, 760.0, u) * TAU)
+		var harm := sin(t * lerpf(2620.0, 1280.0, u) * TAU) * 0.5
+		var grit := (rng.randf() * 2.0 - 1.0) * 0.18
+		s[i] = (clang * 0.55 + harm * 0.3 + grit) * env * 0.5
+	return _pack(s)
+
+
+static func ricochet_sound() -> AudioStreamWAV:
+	# Brief upward zing for high-energy wall ricochets — telegraphs that
+	# the ball just kept a lot of momentum off a surface.
+	var dur := 0.075
+	var n := int(dur * SR)
+	var s := PackedFloat32Array()
+	s.resize(n)
+	for i in n:
+		var t := float(i) / float(SR)
+		var u := t / dur
+		var freq := lerpf(1100.0, 2600.0, pow(u, 0.7))
+		var env := pow(1.0 - u, 0.9) * (1.0 - exp(-u * 120.0))
+		var sine := sin(t * freq * TAU)
+		var detune := sin(t * freq * 1.01 * TAU) * 0.4
+		s[i] = (sine + detune) * env * 0.4
+	return _pack(s)
+
+
 static func win_sound() -> AudioStreamWAV:
 	# Triumphant arpeggio C5 -> E5 -> G5 -> C6.
 	var notes := [523.25, 659.25, 783.99, 1046.50]

@@ -4,4 +4,6 @@ extends Node
 signal player_died
 signal level_completed
 signal ball_hit(speed: float)
+signal ball_ricochet(speed: float)
 signal flipper_fired
+signal hazard_hit

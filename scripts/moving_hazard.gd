@@ -33,14 +33,20 @@ func _physics_process(delta: float) -> void:
 		_delay_left -= delta
 		return
 	# Advance phase across a full sweep cycle [0, 2*range_px] then mirror.
+	# Sweep period is sized so the average speed across the cycle is the
+	# configured `speed`, regardless of ease — peak speed scales up with
+	# easing, but per-cycle travel time stays predictable for level design.
 	var sweep_time := (4.0 * range_px) / maxf(speed, 1.0)
 	if sweep_time <= 0.0:
 		return
 	_phase = fmod(_phase + delta / sweep_time, 1.0)
-	# Triangle wave in [0,1] mapped to [-range, +range].
+	# Linear triangle position in [-1, +1].
 	var tri := 1.0 - absf(_phase * 2.0 - 1.0) * 2.0
-	# Optional ease toward ends (sin-shaped position).
-	var eased := lerpf(tri, sin(tri * PI * 0.5), ease_amount)
+	# Cosine position in [-1, +1] — same endpoints/midpoint as the triangle
+	# but with zero velocity at the endpoints, so the hazard genuinely slows
+	# and reverses smoothly when ease_amount = 1.
+	var cosine_pos := -cos(_phase * TAU)
+	var eased := lerpf(tri, cosine_pos, ease_amount)
 	var dir := axis.normalized()
 	if dir == Vector2.ZERO:
 		dir = Vector2.RIGHT

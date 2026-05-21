@@ -1,118 +1,89 @@
 # Pin Down
 
-A physics-based vertical pinball survival game built with Godot.
+Pin Down is a physics-based vertical pinball game built in Godot. The player guides a falling ball from the top of a procedurally assembled level to the exit at the bottom by timing flippers, managing momentum, and avoiding instant-death hazards.
 
-Guide a falling ball through dangerous procedurally generated levels using strategically placed flippers. Master momentum, avoid deadly hazards, and reach the exit at the bottom of each level.
+The design focus is fast, readable, skill-based movement: the ball is always physics-driven, the player controls the environment instead of the ball directly, and each run creates a fresh layout from modular chunks.
 
-## Gameplay
+## Core Mechanics
 
-The player controls a physics-driven ball indirectly through flippers.
-
-Your objective is simple:
-
-1. Spawn at the top of the level
-2. Use flippers to redirect momentum
-3. Avoid hazards and obstacles
-4. Reach the exit
-5. Survive increasingly challenging layouts
-
-Fast restarts and skill-based movement encourage players to improve with every run.
-
-## Features
-
-- Physics-based ball movement
-- Responsive flipper controls
-- Momentum-driven gameplay
-- Procedural chunk generation
-- Difficulty scaling system
-- Static and moving hazards
-- Instant death and fast retry loop
-- Vertical follow camera
-- Sound effects and gameplay feedback
-- Replayable level layouts
+- **Physics ball:** A `RigidBody2D` ball falls under gravity, bounces off level geometry, and carries momentum through the entire run.
+- **Standard flippers:** Pinball-style arms rotate around a pivot when the flipper input is held.
+- **Flat flippers:** Rigid platforms translate as a single plate, useful for blocking, pushing, or redirecting the ball.
+- **Inverted flipper behavior:** Some flippers start raised and move downward while held, creating different timing patterns with the same input.
+- **Hazards:** Spike hazards kill instantly on contact. Hazards can be static or move in a ping-pong path.
+- **Procedural chunks:** Levels are assembled vertically from authored chunks with difficulty values and weighted selection.
+- **Exit and restart loop:** Reaching the bottom exit generates a new level. Dying restarts quickly.
 
 ## Controls
 
-| Action            | Key                       |
-| ----------------- | ------------------------- |
-| Activate Flippers | Space / Left Mouse Button |
-| Restart Level     | R                         |
-| Pause             | Esc                       |
+- **Space** or **left mouse button:** Hold to activate flippers.
+- **R:** Restart the current run.
+- **Esc:** Pause or unpause.
 
-## Design Pillars
+## Gameplay Loop
 
-- Physics-driven skill gameplay
-- Precision timing
-- Momentum control
-- Fast retries
-- High replayability
-- Clear and readable gameplay
+1. Spawn at the top of the level.
+2. Fall through a generated sequence of chunks.
+3. Use flippers to redirect momentum and recover from bad angles.
+4. Avoid spikes and moving hazards.
+5. Reach the exit at the bottom.
+6. Start a new generated level with a slightly tougher difficulty ramp.
 
-## Built With
+Failure is immediate: touching a hazard kills the ball and triggers a fast restart.
 
-- Godot Engine 4.x
-- GDScript
+## Systems Overview
 
-## Current Status
+- `scripts/game_controller.gd` owns the active run, ball spawning, restart flow, level completion, UI feedback, camera shake, and audio routing.
+- `scripts/ball.gd` implements the physics ball, velocity clamps, anti-stuck nudging, impact events, and trail rendering.
+- `scripts/flipper_standard.gd` and `scripts/flipper_flat.gd` implement the two MVP flipper types.
+- `scripts/hazard_spike.gd` and `scripts/moving_hazard.gd` implement instant-death hazards and configurable ping-pong movement.
+- `scripts/chunk_generator.gd` builds levels from chunk definitions, respects a difficulty budget, applies weighted random selection, and returns debug metadata for balancing.
+- `scripts/chunk_definition.gd` and `resources/chunk_def_*.tres` hold chunk scene references, difficulty values, weights, and future-facing data fields.
+- `scripts/vertical_camera.gd` follows the ball vertically while keeping horizontal framing fixed.
+- `scripts/audio_synth.gd` generates placeholder sound effects for flippers, impacts, hazards, death, ricochets, and level completion.
 
-Prototype / MVP
+## MVP Scope
 
-Implemented:
+The current MVP target includes:
 
-- Ball physics
-- Flipper system
-- Hazard system
-- Camera system
-- Level generation
-- Audio feedback
-- Death and restart flow
-- Exit and completion system
+- Physics-driven ball movement.
+- Standard and flat flippers.
+- Static spike hazards.
+- Moving spike hazards with speed, range, direction, and delay settings.
+- Modular chunk-based level generation.
+- Difficulty-budgeted chunk selection.
+- Level completion through a bottom exit.
+- Death and restart flow.
+- Vertical follow camera.
+- Basic readable visuals, UI feedback, and placeholder audio.
 
-Planned Improvements:
+Not included in the MVP:
 
-- Additional hazard types
-- More procedural chunk variety
-- Improved difficulty progression
-- Advanced flipper mechanics
-- Enhanced visual effects
-- Expanded level content
+- Combat or enemies.
+- Roguelike upgrades.
+- Multiple biomes.
+- Meta progression.
+- Narrative content.
+- Final art, music, or production audio assets.
 
-## Running the Project
+## Future Ideas
 
-1. Install Godot 4.x
-2. Clone the repository
+- Enemy hazards such as turrets, moving enemies, and projectile patterns.
+- Between-level upgrades such as stronger flippers, extra lives, slow motion, magnet effects, or air control.
+- Biomes with unique visuals, physics modifiers, music, hazards, and chunk pools.
+- More chunk variants, optional routes, and risk-reward layouts.
+- Stronger balancing tools for generated level difficulty and solvability.
 
-```bash
-git clone <repository-url>
-```
+## Setup and Technical Notes
 
-3. Open the project in Godot
-4. Load `project.godot`
-5. Press **F5** to run
+This project targets Godot 4.6 or a compatible Godot 4.x version.
 
-## Project Structure
+To run the project:
 
-```text
-scenes/
-├── main.tscn
-├── chunks/
-├── hazards/
-├── flippers/
+1. Install Godot 4.x.
+2. Open `project.godot` in Godot.
+3. Run the main scene at `scenes/main.tscn`.
 
-scripts/
-├── ball.gd
-├── game_controller.gd
-├── chunk_generator.gd
-├── hazard_spike.gd
-├── moving_hazard.gd
-├── flipper_standard.gd
-├── flipper_flat.gd
-```
+The active runtime path is `scenes/main.tscn`, which uses `scripts/game_controller.gd` and `scripts/chunk_generator.gd`. Some older prototype scripts and scene folders may still exist in the repository; treat the active main scene and the top-level `chunks/`, `resources/chunk_def_*.tres`, and `scripts/` systems as the current MVP path.
 
-## License
-
-This project is provided for educational and development purposes.
-
----
-
-Pin Down is an experimental arcade game focused on satisfying physics interactions, procedural replayability, and momentum-based skill gameplay.
+Before calling the MVP complete, do a manual playtest in Godot to verify scene loading, hazard contact, flipper feel, generated-level fairness, restart flow, and exit completion.

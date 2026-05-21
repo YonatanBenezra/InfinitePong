@@ -1,17 +1,17 @@
 extends AnimatableBody2D
 ## Standard pinball flipper: rotates around its origin (the pivot).
 ##
-## Convention (matches real pinball):
-##  - At rest, bar hangs DOWN from pivot (rest_angle_deg > 0 = tilted below
-##    the local horizontal).
-##  - When pressed, bar swings UP (active_angle_deg < 0 = tilted above
-##    the local horizontal).
-##  - For a right-side flipper, set mirror=true so the bar swings in the
-##    opposite world direction while still appearing to flick upward.
+## Two modes (GDD: "some start lowered and move upward when held, some
+## start fully raised and return downward while held"):
+##  - Default (upward swing): rest_angle_deg > active_angle_deg.
+##    Bar hangs down, pressing swings it up. This is the classic flipper.
+##  - Inverted (downward swing): rest_angle_deg < active_angle_deg.
+##    Bar starts raised (often blocking the path), pressing drops it.
 ##
-## - flick_speed_deg controls how fast the bar moves between rest/active.
-## - On the press edge, applies a single impulse to any ball touching the
-##   bar so the flick feels like a real kick beyond pure kinematic motion.
+## The kick direction follows the actual swing automatically — no need to
+## reconfigure it for the inverted case. For a right-side flipper, set
+## mirror=true so the swing mirrors in world space while still using the
+## same angle conventions.
 
 @export var rest_angle_deg: float = 30.0
 @export var active_angle_deg: float = -52.0
@@ -74,9 +74,11 @@ func _apply_kick_to_overlapping_ball() -> void:
 	# against pushing a ball INTO the bar when it's barely overlapping.
 	var away_dir: Vector2 = offset.normalized() if dist > 0.001 else swing_normal
 	var kick_dir := (away_dir + swing_normal).normalized()
-	# Safety: a flipper should never push the ball straight down. Cap the
-	# downward (positive Y) component so even degenerate geometry stays sane.
-	if kick_dir.y > 0.35:
+	# Safety: only clamp the downward (positive Y) component for default
+	# upward-swinging flippers — for inverted flippers, swinging downward
+	# IS the intent, so let the kick follow the swing direction freely.
+	var swings_upward := swing_sign < 0.0
+	if swings_upward and kick_dir.y > 0.35:
 		kick_dir.y = 0.35
 		kick_dir = kick_dir.normalized()
 	# Tip of the bar has more leverage than the base.
