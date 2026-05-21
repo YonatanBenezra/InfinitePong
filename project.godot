@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
 ; since the parameters that go here are not all obvious.
@@ -5,12 +6,16 @@
 ; Format:
 ;   [section] ; section goes between []
 ;   param=value ; assign values to parameters
+=======
+; Pin Down — Godot 4.6.2+
+>>>>>>> 3baf8dd182d1f8559ff606cfad718104a3199c39
 
 config_version=5
 
 [application]
 
 config/name="Pin Down"
+<<<<<<< HEAD
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
@@ -24,35 +29,63 @@ GameEvents="*res://scripts/game_events.gd"
 window/size/viewport_width=640
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
+=======
+config/description="Pin Down — physics pinball, procedural chunks (GDD MVP+polish)"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1152
+window/size/viewport_height=648
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+>>>>>>> 3baf8dd182d1f8559ff606cfad718104a3199c39
 
 [input]
 
 flipper={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":32,"key_label":0,"unicode":32,"location":0,"echo":false,"script":null)
+<<<<<<< HEAD
 , Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":0,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":1,"canceled":false,"pressed":false,"double_click":false,"script":null)
+=======
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":90,"key_label":0,"unicode":122,"location":0,"echo":false,"script":null)
+, Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":1,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":1,"canceled":false,"pressed":true,"double_click":false,"script":null)
+>>>>>>> 3baf8dd182d1f8559ff606cfad718104a3199c39
 ]
 }
 restart={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":82,"key_label":0,"unicode":114,"location":0,"echo":false,"script":null)
+<<<<<<< HEAD
 ]
 }
 pause={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194305,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+=======
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194309,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+>>>>>>> 3baf8dd182d1f8559ff606cfad718104a3199c39
 ]
 }
 
 [layer_names]
 
+<<<<<<< HEAD
 2d_physics/layer_1="world"
 2d_physics/layer_2="ball"
+=======
+2d_physics/layer_1="ball"
+2d_physics/layer_2="geometry"
+>>>>>>> 3baf8dd182d1f8559ff606cfad718104a3199c39
 2d_physics/layer_3="hazard"
 2d_physics/layer_4="exit"
 
 [physics]
 
+<<<<<<< HEAD
 3d/physics_engine="Jolt Physics"
 2d/default_gravity=1100.0
 
@@ -60,3 +93,10 @@ pause={
 
 rendering_device/driver.windows="d3d12"
 environment/defaults/default_clear_color=Color(0.08, 0.09, 0.14, 1)
+=======
+2d/default_gravity=980.0
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+>>>>>>> 3baf8dd182d1f8559ff606cfad718104a3199c39

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [gd_scene load_steps=5 format=3 uid="uid://cmainpin01"]
 
 [ext_resource type="Script" path="res://scripts/game_controller.gd" id="1"]
@@ -136,3 +137,137 @@ bus = "Master"
 
 [node name="SfxWin" type="AudioStreamPlayer" parent="."]
 bus = "Master"
+=======
+[gd_scene load_steps=7 format=3 uid="uid://pin_down_main"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/camera_controller.gd" id="2_cam"]
+[ext_resource type="Script" path="res://scripts/level_generator.gd" id="3_gen"]
+[ext_resource type="Script" path="res://scripts/audio_manager.gd" id="4_audio"]
+[ext_resource type="PackedScene" uid="uid://pin_ball" path="res://scenes/ball.tscn" id="5_ball"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(20, 800)
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="Background" type="Polygon2D" parent="."]
+z_index = -10
+color = Color(0.06, 0.07, 0.12, 1)
+polygon = PackedVector2Array(0, 0, 1152, 0, 1152, 6000, 0, 6000)
+
+[node name="LevelRoot" type="Node2D" parent="."]
+
+[node name="LaneVisuals" type="Node2D" parent="."]
+
+[node name="LaneLeft" type="Line2D" parent="LaneVisuals"]
+position = Vector2(320, 0)
+width = 3.0
+default_color = Color(0.35, 0.4, 0.55, 0.6)
+points = PackedVector2Array(0, 0, 0, 800)
+
+[node name="LaneRight" type="Line2D" parent="LaneVisuals"]
+position = Vector2(832, 0)
+width = 3.0
+default_color = Color(0.35, 0.4, 0.55, 0.6)
+points = PackedVector2Array(0, 0, 0, 800)
+
+[node name="Walls" type="Node2D" parent="."]
+
+[node name="WallLeft" type="StaticBody2D" parent="Walls"]
+position = Vector2(320, 400)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallLeft"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="WallRight" type="StaticBody2D" parent="Walls"]
+position = Vector2(832, 400)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls/WallRight"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="Ball" parent="." instance=ExtResource("5_ball")]
+position = Vector2(576, 80)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(576, 324)
+script = ExtResource("2_cam")
+
+[node name="LevelGenerator" type="Node" parent="."]
+script = ExtResource("3_gen")
+min_chunks = 3
+max_chunks = 6
+difficulty_budget = 14
+
+[node name="AudioManager" type="Node" parent="."]
+script = ExtResource("4_audio")
+
+[node name="FlipperPlayer" type="AudioStreamPlayer" parent="AudioManager"]
+
+[node name="ImpactPlayer" type="AudioStreamPlayer" parent="AudioManager"]
+
+[node name="DeathPlayer" type="AudioStreamPlayer" parent="AudioManager"]
+
+[node name="CompletePlayer" type="AudioStreamPlayer" parent="AudioManager"]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="StatusLabel" type="Label" parent="UI"]
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 800.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.92, 0.92, 0.96, 1)
+theme_override_font_sizes/font_size = 20
+text = "Pin Down"
+
+[node name="HintLabel" type="Label" parent="UI"]
+offset_left = 20.0
+offset_top = 44.0
+offset_right = 800.0
+offset_bottom = 68.0
+theme_override_colors/font_color = Color(0.7, 0.72, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "Descend to the gold EXIT gate. Avoid red spikes."
+
+[node name="DepthLabel" type="Label" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 16.0
+offset_right = -20.0
+offset_bottom = 44.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.75, 0.78, 0.9, 1)
+theme_override_font_sizes/font_size = 16
+text = "Depth: 0%"
+horizontal_alignment = 2
+
+[node name="Overlay" type="PanelContainer" parent="UI"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -60.0
+offset_right = 220.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="UI/Overlay"]
+layout_mode = 2
+
+[node name="Message" type="Label" parent="UI/Overlay/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Game Over"
+horizontal_alignment = 1
+>>>>>>> 3baf8dd182d1f8559ff606cfad718104a3199c39

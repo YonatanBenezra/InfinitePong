@@ -1,0 +1,72 @@
+[gd_scene load_steps=5 format=3 uid="uid://chunk_hard"]
+
+[ext_resource type="PackedScene" uid="uid://std_flipper" path="res://scenes/flippers/standard_flipper.tscn" id="1_flipper"]
+[ext_resource type="PackedScene" uid="uid://spike_hazard" path="res://scenes/hazards/spike_hazard.tscn" id="2_spike"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_narrow"]
+size = Vector2(120, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_side"]
+size = Vector2(80, 16)
+
+[node name="ChunkHard" type="Node2D"]
+
+[node name="Backdrop" type="Polygon2D" parent="."]
+z_index = -1
+color = Color(0.08, 0.09, 0.15, 0.85)
+polygon = PackedVector2Array(-260, 0, 260, 0, 260, 480, -260, 480)
+
+[node name="ConnectTop" type="Marker2D" parent="."]
+position = Vector2(0, 0)
+
+[node name="ConnectBottom" type="Marker2D" parent="."]
+position = Vector2(0, 480)
+
+[node name="LeftShelf" type="StaticBody2D" parent="."]
+position = Vector2(-140, 300)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftShelf"]
+shape = SubResource("RectangleShape2D_side")
+
+[node name="Visual" type="Polygon2D" parent="LeftShelf"]
+color = Color(0.15, 0.17, 0.28, 1)
+polygon = PackedVector2Array(-40, -8, 40, -8, 40, 8, -40, 8)
+
+[node name="RightShelf" type="StaticBody2D" parent="."]
+position = Vector2(140, 360)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RightShelf"]
+shape = SubResource("RectangleShape2D_side")
+
+[node name="Visual" type="Polygon2D" parent="RightShelf"]
+color = Color(0.15, 0.17, 0.28, 1)
+polygon = PackedVector2Array(-40, -8, 40, -8, 40, 8, -40, 8)
+
+[node name="NarrowBridge" type="StaticBody2D" parent="."]
+position = Vector2(0, 200)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NarrowBridge"]
+shape = SubResource("RectangleShape2D_narrow")
+
+[node name="Visual" type="Polygon2D" parent="NarrowBridge"]
+color = Color(0.17, 0.19, 0.32, 1)
+polygon = PackedVector2Array(-60, -8, 60, -8, 60, 8, -60, 8)
+
+[node name="StandardFlipper" parent="." instance=ExtResource("1_flipper")]
+position = Vector2(0, 420)
+rotation = -0.2
+
+[node name="MovingSpike" parent="." instance=ExtResource("2_spike")]
+position = Vector2(-60, 260)
+move_enabled = true
+move_speed = 100.0
+move_distance = 72.0
+
+[node name="StaticSpike" parent="." instance=ExtResource("2_spike")]
+position = Vector2(100, 320)
