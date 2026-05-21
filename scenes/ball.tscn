@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 [gd_scene load_steps=4 format=3 uid="uid://cballpin01"]
 
 [ext_resource type="Script" path="res://scripts/ball.gd" id="1"]
@@ -24,36 +23,3 @@ script = ExtResource("1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_ball")
-=======
-[gd_scene load_steps=4 format=3 uid="uid://pin_ball"]
-
-[ext_resource type="Script" path="res://scripts/ball.gd" id="1_ball"]
-
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball"]
-bounce = 0.78
-friction = 0.12
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_ball"]
-radius = 12.0
-
-[node name="Ball" type="RigidBody2D"]
-collision_layer = 1
-collision_mask = 2
-mass = 0.85
-physics_material_override = SubResource("PhysicsMaterial_ball")
-continuous_cd = 2
-contact_monitor = true
-max_contacts_reported = 8
-script = ExtResource("1_ball")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_ball")
-
-[node name="Visual" type="Polygon2D" parent="."]
-color = Color(0.95, 0.32, 0.38, 1)
-polygon = PackedVector2Array(0, -13, 11.3, -6.5, 11.3, 6.5, 0, 13, -11.3, 6.5, -11.3, -6.5)
-
-[node name="Highlight" type="Polygon2D" parent="."]
-color = Color(1, 0.55, 0.6, 0.5)
-polygon = PackedVector2Array(-3, -6, 3, -6, 0, -2)
->>>>>>> 3baf8dd182d1f8559ff606cfad718104a3199c39
