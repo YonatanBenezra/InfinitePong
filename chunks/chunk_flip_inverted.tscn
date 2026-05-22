@@ -77,21 +77,21 @@ shape = SubResource("Rect_diamond")
 position = Vector2(170, 290)
 rest_angle_deg = -32.0
 active_angle_deg = 38.0
-flick_speed_deg = 2400.0
-kick_impulse = 540.0
+flick_speed_deg = 1200.0
+kick_impulse = 480.0
 
 [node name="InvertedFlipperRight" parent="." instance=ExtResource("2")]
 position = Vector2(470, 290)
 rotation = 3.141593
 rest_angle_deg = -32.0
 active_angle_deg = 38.0
-flick_speed_deg = 2400.0
-kick_impulse = 540.0
+flick_speed_deg = 1200.0
+kick_impulse = 480.0
 mirror = true
 
 [node name="InvertedGate" parent="." instance=ExtResource("1")]
 position = Vector2(320, 360)
 active_offset = Vector2(0, 80)
-move_speed = 2600.0
+move_speed = 1300.0
 kick_impulse = 320.0
 contact_radius = 120.0

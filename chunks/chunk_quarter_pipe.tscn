@@ -1,0 +1,56 @@
+[gd_scene load_steps=4 format=3 uid="uid://cchunkqpip1"]
+
+[ext_resource type="Script" path="res://scripts/curved_ramp.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
+size = Vector2(64, 420)
+
+[sub_resource type="RectangleShape2D" id="Rect_ledge"]
+size = Vector2(150, 20)
+
+[node name="ChunkQuarterPipe" type="Node2D"]
+
+[node name="ConnectTop" type="Marker2D" parent="."]
+position = Vector2(320, 0)
+
+[node name="ConnectBottom" type="Marker2D" parent="."]
+position = Vector2(320, 440)
+
+[node name="BallSpawn" type="Marker2D" parent="."]
+position = Vector2(320, 48)
+
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(40, 220)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(600, 220)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="GuideTop" type="StaticBody2D" parent="."]
+position = Vector2(320, 110)
+rotation = 0.45
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GuideTop"]
+shape = SubResource("Rect_ledge")
+
+[node name="QuarterPipe" type="StaticBody2D" parent="."]
+position = Vector2(340, 150)
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1")
+arc_radius = 200.0
+start_angle_deg = 0.0
+end_angle_deg = 92.0
+segment_count = 14
+thickness = 28.0

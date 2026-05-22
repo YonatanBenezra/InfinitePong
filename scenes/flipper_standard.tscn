@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/flipper_standard.gd" id="1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_flip"]
-size = Vector2(100, 20)
+size = Vector2(100, 24)
 
 [node name="FlipperStandard" type="AnimatableBody2D"]
 collision_layer = 1

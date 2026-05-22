@@ -75,5 +75,5 @@ shape = SubResource("Rect_lip")
 [node name="PopFlipper" parent="." instance=ExtResource("1")]
 position = Vector2(320, 290)
 active_offset = Vector2(0, -110)
-move_speed = 3200.0
-kick_impulse = 950.0
+move_speed = 1300.0
+kick_impulse = 600.0
