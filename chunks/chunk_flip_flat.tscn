@@ -54,4 +54,4 @@ shape = SubResource("Rect_ledge_side")
 [node name="FlipperFlat" parent="." instance=ExtResource("1")]
 position = Vector2(320, 290)
 active_offset = Vector2(0, -80)
-move_speed = 2400.0
+move_speed = 1300.0

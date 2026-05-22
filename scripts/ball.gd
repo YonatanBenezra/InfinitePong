@@ -7,17 +7,20 @@ extends RigidBody2D
 ## - spawn_impulse: initial downward+sideways push so the ball is never
 ##   stuck on the very first frame.
 
-@export var max_speed: float = 1900.0
+@export var max_speed: float = 1200.0
+## Hard cap on spin so a strong glancing hit can't set the ball spinning
+## wildly (kept low because the ball is a circle — visible spin is noise).
+@export var max_angular_speed: float = 24.0
 @export var min_falling_speed: float = 90.0
 @export var min_horizontal_drift: float = 30.0
-@export var radius: float = 13.0
+@export var radius: float = 6.5
 @export var ball_color: Color = Color(1.0, 0.97, 0.78)
 @export var ball_glow_color: Color = Color(1.0, 0.85, 0.35, 0.5)
 @export var outline_color: Color = Color(0.1, 0.12, 0.22)
-@export var hit_cooldown: float = 0.05
+@export var hit_cooldown: float = 0.12
 ## Above this speed at the moment of impact, the contact is treated as a
 ## ricochet (distinct audio cue) rather than a generic thud.
-@export var ricochet_speed_threshold: float = 720.0
+@export var ricochet_speed_threshold: float = 900.0
 @export var trail_length: int = 14
 @export var trail_color: Color = Color(1.0, 0.9, 0.45, 0.55)
 @export var spawn_impulse: Vector2 = Vector2(0, 120)
@@ -37,10 +40,15 @@ func _ready() -> void:
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	var v := state.linear_velocity
 	# Hard speed cap so high-force flippers cannot blow the simulation up.
+	# Applied every physics step, so it also clamps the ball right after a
+	# strong flipper kick or ricochet.
 	var sp := v.length()
 	if sp > max_speed:
 		state.linear_velocity = v.normalized() * max_speed
 		v = state.linear_velocity
+	# Clamp spin after strong/glancing hits.
+	if absf(state.angular_velocity) > max_angular_speed:
+		state.angular_velocity = signf(state.angular_velocity) * max_angular_speed
 	# Anti-rest nudge: if the ball is essentially stationary, give it
 	# a small downward kick so gravity has something to amplify and
 	# the player is never permanently stuck on a flat ledge.

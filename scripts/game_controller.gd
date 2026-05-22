@@ -14,6 +14,9 @@ extends Node2D
 @export var win_restart_delay: float = 1.2
 @export var ball_fall_grace_y: float = 600.0
 @export var spawn_invuln_seconds: float = 0.35
+## Several flippers in a chunk all fire on the same key press; this gates
+## the flipper cue so one press = one sound, never a stacked overlap.
+@export var flipper_sfx_cooldown: float = 0.09
 
 @onready var _world: Node2D = $World
 @onready var _camera: Camera2D = $Camera2D
@@ -42,11 +45,19 @@ var _invuln_until: float = 0.0
 var _run_count: int = 0
 var _death_count: int = 0
 var _best_depth_pct: float = 0.0
+var _last_flip_sfx: float = -1.0
+## Level number — advances only on a successful exit, NOT on death. This is
+## what the procedural generator scales difficulty/length/hazards against.
+var _level_index: int = 1
+## Seed for the current level. Stable across death-retries so a level
+## replays as the same layout; rerolled only when advancing a level.
+var _level_seed: int = 0
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_rng.randomize()
+	_level_seed = randi()
 	_generator = get_node(chunk_generator_path) as ChunkGenerator
 	GameEvents.player_died.connect(_on_player_died)
 	GameEvents.level_completed.connect(_on_level_completed)
@@ -111,7 +122,7 @@ func _update_depth_ui() -> void:
 		var total: float = _level_bottom_y - _level_top_y
 		pct = clampf(travelled / total, 0.0, 1.0)
 	_best_depth_pct = maxf(_best_depth_pct, pct)
-	_depth_label.text = "DEPTH %d%%   RUN %d   DEATHS %d" % [int(pct * 100.0), _run_count, _death_count]
+	_depth_label.text = "DEPTH %d%%   LEVEL %d   DEATHS %d" % [int(pct * 100.0), _level_index, _death_count]
 	var bar_width := _depth_bar_bg.size.x
 	_depth_bar_fill.size.x = bar_width * pct
 	# Color shifts warm-to-cool as the player descends.
@@ -158,13 +169,19 @@ func _spawn_ball_if_needed() -> void:
 		_camera.call("set_target", _ball)
 
 
-func _regenerate_level() -> void:
+func _regenerate_level(advance: bool = false) -> void:
 	_busy = false
 	_center.visible = false
 	_run_count += 1
+	# Advancing rerolls the layout and bumps difficulty; a death-retry keeps
+	# the same seed so the player replays the exact same level layout.
+	if advance:
+		_level_index += 1
+		_level_seed = randi()
 	_best_depth_pct = 0.0
 	if _generator:
-		var info: Dictionary = _generator.build_level(_world, _rng, _run_count)
+		_rng.seed = _level_seed
+		var info: Dictionary = _generator.build_level(_world, _rng, _level_index)
 		var spawn: Vector2 = info.get("spawn_global", Vector2(320, 80))
 		_level_bottom_y = float(info.get("bottom_y", 4000.0))
 		_level_top_y = spawn.y
@@ -192,11 +209,12 @@ func _on_player_died() -> void:
 	_play_sfx(_sfx_death)
 	_shake(18.0)
 	_flash(Color(0.85, 0.1, 0.15, 0.55))
-	_center.text = "YOU DIED\nDepth: %d%%\n[R] Restart" % int(_best_depth_pct * 100.0)
+	_center.text = "YOU DIED — LEVEL %d\nDepth: %d%%\n[R] Restart" % [_level_index, int(_best_depth_pct * 100.0)]
 	_center.visible = true
 	await get_tree().create_timer(death_restart_delay).timeout
 	if _busy:
-		_regenerate_level()
+		# Retry the SAME level (advance = false): same seed, same layout.
+		_regenerate_level(false)
 
 
 func _on_level_completed() -> void:
@@ -206,11 +224,12 @@ func _on_level_completed() -> void:
 	_play_sfx(_sfx_win)
 	_shake(10.0)
 	_flash(Color(0.25, 0.95, 0.4, 0.45))
-	_center.text = "EXIT REACHED!\nNew layout incoming…"
+	_center.text = "LEVEL %d COMPLETE!\nNext level…" % _level_index
 	_center.visible = true
 	await get_tree().create_timer(win_restart_delay).timeout
 	if _busy:
-		_regenerate_level()
+		# Advance to the next level (advance = true): new seed, harder budget.
+		_regenerate_level(true)
 
 
 func _on_ball_hit(speed: float) -> void:
@@ -226,7 +245,7 @@ func _on_ball_hit(speed: float) -> void:
 func _on_ball_ricochet(speed: float) -> void:
 	# High-energy wall hit: distinct cue + a touch more shake.
 	_play_sfx(_sfx_ricochet)
-	var s := clampf((speed - 720.0) / 1200.0, 0.0, 1.0) * 8.0 + 2.0
+	var s := clampf((speed - 900.0) / 300.0, 0.0, 1.0) * 8.0 + 2.0
 	_shake(s)
 
 
@@ -237,6 +256,12 @@ func _on_hazard_hit() -> void:
 
 
 func _on_flipper_fired() -> void:
+	# One cue per activation: ignore the duplicate emits from other flippers
+	# firing on the same press so the sound never spams or overlaps.
+	var now := Time.get_ticks_msec() / 1000.0
+	if now - _last_flip_sfx < flipper_sfx_cooldown:
+		return
+	_last_flip_sfx = now
 	_play_sfx(_sfx_flip)
 	_shake(2.0)
 

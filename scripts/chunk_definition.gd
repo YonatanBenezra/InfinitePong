@@ -23,9 +23,25 @@ class_name ChunkDefinition
 @export var hazard_pool: Array[PackedScene] = []
 @export var connection_tags: PackedStringArray = PackedStringArray()
 @export var tags: PackedStringArray = PackedStringArray()
+## Coarse difficulty bucket ("easy" / "medium" / "hard") used by the
+## generator's per-level gating. Leave empty to derive it automatically
+## from `difficulty`: 1-2 -> easy, 3 -> medium, 4+ -> hard.
+@export var category: StringName = &""
 
 
 func matches_biome(active_biome: StringName) -> bool:
 	if active_biome == &"" or biome == &"":
 		return true
 	return biome == active_biome
+
+
+## Easy / Medium / Hard bucket for this chunk. Uses the explicit `category`
+## override when set, otherwise derives it from the numeric difficulty.
+func get_category() -> StringName:
+	if category != &"":
+		return category
+	if difficulty <= 2:
+		return &"easy"
+	elif difficulty <= 3:
+		return &"medium"
+	return &"hard"

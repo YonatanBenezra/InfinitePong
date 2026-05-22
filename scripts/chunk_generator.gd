@@ -8,8 +8,17 @@ class_name ChunkGenerator
 ##   marker to the previous chunk's ConnectBottom marker.
 ## - Bookends every level with the start and finale chunks (which carry
 ##   the safe spawn zone and the green exit, respectively).
-## - Difficulty budget and length scale gently with run_count so the
-##   first run is forgiving and later runs feel like an arcade ramp.
+##
+## Progression: every generation knob scales with the LEVEL NUMBER (passed
+## in as `level_index`), not the attempt count, so the player feels a clear
+## step up from one level to the next:
+##   * length        — more chunks per level
+##   * budget         — more total difficulty to spend
+##   * geometry gate  — harder chunk categories unlock with the level
+##   * hazard speed   — moving hazards get faster on later levels
+##   * recovery       — early chunks of each level are forced gentle
+## Level 1 only ever sees Easy chunks; Medium unlocks at level 2; Hard at
+## level 4. The budget maths keeps every produced layout finishable.
 
 @export var config: LevelGenConfig
 @export var chunk_pool: Array[ChunkDefinition] = []
@@ -19,6 +28,8 @@ class_name ChunkGenerator
 ## biome tag. Set to e.g. &"factory" to restrict to chunks marked for that
 ## biome (or chunks with no biome set, which act as universal).
 @export var active_biome: StringName = &""
+
+const _MOVING_HAZARD_SCRIPT := "res://scripts/moving_hazard.gd"
 
 
 func _ensure_defaults() -> void:
@@ -45,6 +56,8 @@ func _ensure_defaults() -> void:
 			preload("res://resources/chunk_def_bumper_pit.tres"),
 			preload("res://resources/chunk_def_corridor.tres"),
 			preload("res://resources/chunk_def_skill.tres"),
+			preload("res://resources/chunk_def_quarter_pipe.tres"),
+			preload("res://resources/chunk_def_half_pipe.tres"),
 		]
 
 
@@ -78,7 +91,19 @@ func _filter_biome(pool: Array[ChunkDefinition]) -> Array[ChunkDefinition]:
 	return out
 
 
-func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) -> Dictionary:
+## Highest chunk difficulty this level is allowed to spawn. This is the
+## Easy/Medium/Hard category gate expressed numerically.
+func _max_difficulty_for_level(lvl: int) -> int:
+	if lvl <= 1:
+		return 2   # Easy only.
+	elif lvl <= 2:
+		return 3   # Easy + Medium.
+	elif lvl <= 3:
+		return 4   # adds the lighter Hard chunks.
+	return 6       # everything.
+
+
+func build_level(world: Node2D, rng: RandomNumberGenerator, level_index: int = 1) -> Dictionary:
 	_ensure_defaults()
 	# Clear previous chunks.
 	for child in world.get_children():
@@ -92,12 +117,40 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) 
 		push_error("ChunkGenerator: missing chunk definitions")
 		return {}
 
-	# Difficulty ramp: every run, allow more chunks and more budget,
-	# clamped so things don't get absurd.
-	var ramp: int = clampi(run_count - 1, 0, 8)
+	var lvl: int = maxi(level_index, 1)
+	# Ramp saturates so very deep runs stay sane, but it climbs for a long
+	# time so progression keeps being felt level after level.
+	var ramp: int = clampi(lvl - 1, 0, 12)
+
+	# --- Progression knobs (all scale with the level number). ---
+	# Length grows: later levels are noticeably longer.
 	var min_chunks: int = config.min_chunks + ramp / 2
-	var max_chunks: int = mini(config.max_chunks + ramp, 22)
-	var budget: int = config.target_difficulty_budget + ramp * 3
+	var max_chunks: int = mini(config.max_chunks + (ramp * 2) / 3, 28)
+	# Difficulty budget grows steadily so later levels pack harder chunks.
+	var budget: int = config.target_difficulty_budget + ramp * 4
+	# Geometry / precision gate: hard chunks unlock with the level number.
+	var max_chunk_difficulty: int = _max_difficulty_for_level(lvl)
+	# Moving hazards get faster on later levels ("faster hazards").
+	var hazard_speed_mult: float = clampf(1.0 + 0.06 * float(ramp), 1.0, 1.7)
+	# How many opening chunks are forced gentle (calm on-ramp / recovery).
+	var easy_intro: int = 1 if lvl >= 4 else 2
+
+	# Pre-filter the pool by active biome, then by what this level allows.
+	var biome_pool := _filter_biome(chunk_pool)
+	if biome_pool.is_empty():
+		push_warning("ChunkGenerator: active_biome %s has no matching chunks; falling back to full pool" % active_biome)
+		biome_pool = chunk_pool
+	# Level-gated pool: never offer a chunk above this level's cap.
+	var level_pool := _filter_fitting(biome_pool, max_chunk_difficulty)
+	if level_pool.is_empty():
+		push_warning("ChunkGenerator: level cap left no chunks; falling back to biome pool")
+		level_pool = biome_pool
+
+	var min_chunk_difficulty := level_pool[0].difficulty
+	for c in level_pool:
+		min_chunk_difficulty = mini(min_chunk_difficulty, c.difficulty)
+	# Difficulty value below which a chunk counts as a gentle "intro" chunk.
+	var intro_cap: int = maxi(2, min_chunk_difficulty)
 
 	var initial_budget := budget
 	var total_segments := rng.randi_range(min_chunks, max_chunks)
@@ -105,18 +158,6 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) 
 	var remaining_budget: int = budget
 	var used_budget: int = 0
 	var last_def: ChunkDefinition = null
-
-	# First couple of mids on run 1 should be easy so player learns.
-	var easy_threshold: int = 2 if run_count == 1 else 0
-
-	# Pre-filter the pool by active biome once. Empty biome = pass everything.
-	var biome_pool := _filter_biome(chunk_pool)
-	if biome_pool.is_empty():
-		push_warning("ChunkGenerator: active_biome %s has no matching chunks; falling back to full pool" % active_biome)
-		biome_pool = chunk_pool
-	var min_chunk_difficulty := biome_pool[0].difficulty
-	for c in biome_pool:
-		min_chunk_difficulty = mini(min_chunk_difficulty, c.difficulty)
 
 	var sequence: Array[ChunkDefinition] = []
 	sequence.append(start_chunk)
@@ -128,16 +169,20 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) 
 
 	for i in middle_count:
 		var remaining_slots := middle_count - i - 1
+		# Always keep enough budget for the cheapest possible chunk in each
+		# remaining slot, so the level never runs out of affordable chunks.
 		var reserved_budget := remaining_slots * min_chunk_difficulty
 		var max_diff_here: int = remaining_budget - reserved_budget
-		if i < 2 and easy_threshold > 0 and min_chunk_difficulty <= easy_threshold:
-			max_diff_here = mini(max_diff_here, easy_threshold)
+		# Force the opening chunks of every level to be gentle so the player
+		# gets a recovery space before the level ramps up.
+		if i < easy_intro:
+			max_diff_here = mini(max_diff_here, intro_cap)
 		if max_diff_here < min_chunk_difficulty:
 			push_warning("ChunkGenerator: difficulty budget cannot satisfy target chunk count")
 			break
 		var picked: ChunkDefinition = null
 		for _attempt in config.max_pick_attempts_per_slot:
-			var candidate: ChunkDefinition = _pick_weighted(rng, biome_pool)
+			var candidate: ChunkDefinition = _pick_weighted(rng, level_pool)
 			if candidate.difficulty > max_diff_here:
 				continue
 			if last_def != null and candidate == last_def:
@@ -145,7 +190,7 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) 
 			picked = candidate
 			break
 		if picked == null:
-			var fitting := _filter_fitting(biome_pool, max_diff_here)
+			var fitting := _filter_fitting(level_pool, max_diff_here)
 			if fitting.is_empty():
 				push_warning("ChunkGenerator: no affordable chunks fit remaining difficulty budget")
 				break
@@ -188,6 +233,11 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) 
 		WorldPainter.paint(root)
 		last_root = root
 
+	# Scale moving-hazard speed for this level ("faster hazards"). Done after
+	# all chunks are built so it only touches this freshly generated level.
+	if hazard_speed_mult > 1.001:
+		_scale_moving_hazards(world, hazard_speed_mult)
+
 	var first: Node2D = world.get_child(0) as Node2D
 	if first.has_node("BallSpawn"):
 		spawn_global = (first.get_node("BallSpawn") as Node2D).global_position
@@ -202,8 +252,23 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, run_count: int = 1) 
 		"spawn_global": spawn_global,
 		"last_chunk": last_root,
 		"bottom_y": level_bottom_y,
+		"level": lvl,
 		"budget": initial_budget,
 		"used_budget": used_budget,
 		"remaining_budget": remaining_budget,
+		"max_chunk_difficulty": max_chunk_difficulty,
+		"hazard_speed_mult": hazard_speed_mult,
 		"sequence": sequence_names,
 	}
+
+
+## Recursively multiplies the `speed` of every moving_hazard mover under the
+## given node. Scoped to the freshly built `world` subtree so it never
+## touches hazards from a previous (queued-free) level.
+func _scale_moving_hazards(node: Node, mult: float) -> void:
+	var script: Variant = node.get_script()
+	if script is Script and (script as Script).resource_path == _MOVING_HAZARD_SCRIPT:
+		var current: float = float(node.get("speed"))
+		node.set("speed", current * mult)
+	for child in node.get_children():
+		_scale_moving_hazards(child, mult)
