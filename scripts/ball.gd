@@ -27,6 +27,8 @@ extends RigidBody2D
 
 var _trail_points: Array[Vector2] = []
 var _last_hit_time: float = -1.0
+var _skin: Dictionary = {}
+var _skin_time: float = 0.0
 
 
 func _ready() -> void:
@@ -57,24 +59,37 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 		state.linear_velocity.x += (randf() - 0.5) * min_horizontal_drift * 4.0 * state.step
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_skin_time += delta
 	_trail_points.push_front(global_position)
 	if _trail_points.size() > trail_length:
 		_trail_points.resize(trail_length)
 	queue_redraw()
 
 
+## Applies a cosmetic ball skin. The skin fully defines the ball body and
+## its trail colour; called by the game controller on each level start.
+func apply_skin(skin: Dictionary) -> void:
+	_skin = skin
+	if skin.has("trail"):
+		trail_color = skin["trail"]
+
+
 func reset_ball(at_global: Vector2) -> void:
-	# Cleanly reset position + velocity. Freeze briefly so the engine
-	# doesn't re-solve old contacts on the next physics frame.
-	freeze = true
+	# Teleport reliably. Setting global_position alone on a RigidBody2D can be
+	# overridden by the physics server, leaving the ball at its old spot
+	# (the "restart drops me where I died" bug). Driving the physics server
+	# state directly guarantees a true full-level restart from the top.
+	var impulse := spawn_impulse + Vector2((randf() - 0.5) * 60.0, 0.0)
 	global_position = at_global
-	linear_velocity = Vector2.ZERO
-	angular_velocity = 0.0
 	global_rotation = 0.0
-	freeze = false
-	# Tiny initial impulse so the ball is in motion immediately.
-	linear_velocity = spawn_impulse + Vector2((randf() - 0.5) * 60.0, 0.0)
+	linear_velocity = impulse
+	angular_velocity = 0.0
+	var rid := get_rid()
+	PhysicsServer2D.body_set_state(rid, PhysicsServer2D.BODY_STATE_TRANSFORM,
+		Transform2D(0.0, at_global))
+	PhysicsServer2D.body_set_state(rid, PhysicsServer2D.BODY_STATE_LINEAR_VELOCITY, impulse)
+	PhysicsServer2D.body_set_state(rid, PhysicsServer2D.BODY_STATE_ANGULAR_VELOCITY, 0.0)
 	_last_hit_time = -1.0
 	_trail_points.clear()
 
@@ -102,9 +117,10 @@ func _draw() -> void:
 		var p := to_local(_trail_points[i])
 		var c := Color(trail_color.r, trail_color.g, trail_color.b, alpha)
 		draw_circle(p, r, c)
-	# Outer glow.
-	draw_circle(Vector2.ZERO, radius + 4.0, ball_glow_color)
-	# Ball body.
-	draw_circle(Vector2.ZERO, radius, ball_color)
-	# Outline.
-	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 28, outline_color, 2.0, true)
+	# Skinned body. Falls back to the plain ball when no skin is applied.
+	if _skin.is_empty():
+		draw_circle(Vector2.ZERO, radius + 4.0, ball_glow_color)
+		draw_circle(Vector2.ZERO, radius, ball_color)
+		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 28, outline_color, 2.0, true)
+	else:
+		BallSkinRenderer.paint(self, _skin, radius, _skin_time, rotation)

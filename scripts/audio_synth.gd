@@ -136,3 +136,50 @@ static func win_sound() -> AudioStreamWAV:
 		var third := sin(t * freq * 1.5 * TAU) * 0.3
 		s[i] = (sine + third) * note_env * overall * 0.32
 	return _pack(s)
+
+
+static func ui_hover_sound() -> AudioStreamWAV:
+	# Soft, short, high tick for menu hover/focus.
+	var dur := 0.045
+	var n := int(dur * SR)
+	var s := PackedFloat32Array()
+	s.resize(n)
+	for i in n:
+		var t := float(i) / float(SR)
+		var u := t / dur
+		var env := pow(1.0 - u, 1.4) * (1.0 - exp(-u * 120.0))
+		var sine := sin(t * 1320.0 * TAU)
+		s[i] = sine * env * 0.22
+	return _pack(s)
+
+
+static func ui_click_sound() -> AudioStreamWAV:
+	# Crisp confirming click for menu button presses.
+	var dur := 0.10
+	var n := int(dur * SR)
+	var s := PackedFloat32Array()
+	s.resize(n)
+	for i in n:
+		var t := float(i) / float(SR)
+		var u := t / dur
+		var freq := lerpf(660.0, 990.0, pow(u, 0.5))
+		var env := pow(1.0 - u, 1.1) * (1.0 - exp(-u * 90.0))
+		var sine := sin(t * freq * TAU)
+		var sub := sin(t * freq * 0.5 * TAU) * 0.4
+		s[i] = (sine + sub) * env * 0.30
+	return _pack(s)
+
+
+static func ui_back_sound() -> AudioStreamWAV:
+	# Descending tick for back / cancel.
+	var dur := 0.09
+	var n := int(dur * SR)
+	var s := PackedFloat32Array()
+	s.resize(n)
+	for i in n:
+		var t := float(i) / float(SR)
+		var u := t / dur
+		var freq := lerpf(720.0, 420.0, pow(u, 0.6))
+		var env := pow(1.0 - u, 1.2) * (1.0 - exp(-u * 100.0))
+		s[i] = sin(t * freq * TAU) * env * 0.26
+	return _pack(s)
