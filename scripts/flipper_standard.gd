@@ -23,7 +23,7 @@ extends AnimatableBody2D
 
 @export var rest_angle_deg: float = 30.0
 @export var active_angle_deg: float = -52.0
-@export var flick_speed_deg: float = 1200.0
+@export var flick_speed_deg: float = 900.0
 @export var kick_impulse: float = 640.0
 @export var contact_radius: float = 44.0
 @export var bar_length: float = 96.0

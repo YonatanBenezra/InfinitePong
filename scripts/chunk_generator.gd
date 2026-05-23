@@ -49,23 +49,23 @@ func _ensure_defaults() -> void:
 		finale_chunk = preload("res://resources/chunk_def_finale.tres")
 	if chunk_pool.is_empty():
 		chunk_pool = [
-			preload("res://resources/chunk_def_slide.tres"),
+			#preload("res://resources/chunk_def_slide.tres"),
 			preload("res://resources/chunk_def_flip_std.tres"),
-			preload("res://resources/chunk_def_flip_flat.tres"),
+#			preload("res://resources/chunk_def_flip_flat.tres"),
 			preload("res://resources/chunk_def_flip_drop.tres"),
 			preload("res://resources/chunk_def_flip_inverted.tres"),
-			preload("res://resources/chunk_def_spikes_static.tres"),
-			preload("res://resources/chunk_def_spikes_moving.tres"),
-			preload("res://resources/chunk_def_gauntlet.tres"),
-			preload("res://resources/chunk_def_random_gate.tres"),
-			preload("res://resources/chunk_def_zigzag.tres"),
-			preload("res://resources/chunk_def_side_flippers.tres"),
-			preload("res://resources/chunk_def_funnel.tres"),
+			#preload("res://resources/chunk_def_spikes_static.tres"),
+			#preload("res://resources/chunk_def_spikes_moving.tres"),
+			#preload("res://resources/chunk_def_gauntlet.tres"),
+			#preload("res://resources/chunk_def_random_gate.tres"),
+			#preload("res://resources/chunk_def_zigzag.tres"),
+			#preload("res://resources/chunk_def_side_flippers.tres"),
+			#preload("res://resources/chunk_def_funnel.tres"),
 			preload("res://resources/chunk_def_bumper_pit.tres"),
 			preload("res://resources/chunk_def_corridor.tres"),
-			preload("res://resources/chunk_def_skill.tres"),
-			preload("res://resources/chunk_def_quarter_pipe.tres"),
-			preload("res://resources/chunk_def_half_pipe.tres"),
+			#preload("res://resources/chunk_def_skill.tres"),
+			#preload("res://resources/chunk_def_quarter_pipe.tres"),
+			#preload("res://resources/chunk_def_half_pipe.tres"),
 		]
 
 

@@ -11,7 +11,7 @@ extends RigidBody2D
 ## Hard cap on spin so a strong glancing hit can't set the ball spinning
 ## wildly (kept low because the ball is a circle — visible spin is noise).
 @export var max_angular_speed: float = 24.0
-@export var min_falling_speed: float = 90.0
+@export var min_falling_speed: float = 45.0
 @export var min_horizontal_drift: float = 30.0
 @export var radius: float = 6.5
 @export var ball_color: Color = Color(1.0, 0.97, 0.78)
