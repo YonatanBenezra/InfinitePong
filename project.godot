@@ -11,18 +11,31 @@ config_version=5
 [application]
 
 config/name="Pin Down"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/ui/splash.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 GameEvents="*res://scripts/game_events.gd"
+SaveSystem="*res://scripts/systems/save_system.gd"
+GameSettings="*res://scripts/systems/game_settings.gd"
+Worlds="*res://scripts/systems/worlds.gd"
+Profile="*res://scripts/systems/profile.gd"
+BallSkins="*res://scripts/systems/ball_skins.gd"
+Achievements="*res://scripts/systems/achievements.gd"
+Challenges="*res://scripts/systems/challenges.gd"
+MusicManager="*res://scripts/systems/music_manager.gd"
+SceneRouter="*res://scripts/systems/scene_router.gd"
+UITheme="*res://scripts/systems/ui_theme.gd"
+Notifier="*res://scripts/systems/notifier.gd"
 
 [display]
 
 window/size/viewport_width=640
 window/size/viewport_height=720
+window/size/window_width_override=800
+window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 
 [input]

@@ -31,6 +31,14 @@ class_name ChunkGenerator
 
 const _MOVING_HAZARD_SCRIPT := "res://scripts/moving_hazard.gd"
 
+## Canonical screen-edge wall geometry. Authored chunks vary the side walls
+## by ~16px, which leaves a ledge at every chunk seam for the ball to snag
+## on. Every edge wall is snapped to this single width + inner face so the
+## arena reads as one continuous, flush column.
+const EDGE_WALL_WIDTH := 80.0
+const LEFT_WALL_INNER := 60.0
+const RIGHT_WALL_INNER := 580.0
+
 
 func _ensure_defaults() -> void:
 	if config == null:
@@ -41,23 +49,23 @@ func _ensure_defaults() -> void:
 		finale_chunk = preload("res://resources/chunk_def_finale.tres")
 	if chunk_pool.is_empty():
 		chunk_pool = [
-			preload("res://resources/chunk_def_slide.tres"),
+			#preload("res://resources/chunk_def_slide.tres"),
 			preload("res://resources/chunk_def_flip_std.tres"),
-			preload("res://resources/chunk_def_flip_flat.tres"),
+#			preload("res://resources/chunk_def_flip_flat.tres"),
 			preload("res://resources/chunk_def_flip_drop.tres"),
 			preload("res://resources/chunk_def_flip_inverted.tres"),
-			preload("res://resources/chunk_def_spikes_static.tres"),
-			preload("res://resources/chunk_def_spikes_moving.tres"),
-			preload("res://resources/chunk_def_gauntlet.tres"),
-			preload("res://resources/chunk_def_random_gate.tres"),
-			preload("res://resources/chunk_def_zigzag.tres"),
-			preload("res://resources/chunk_def_side_flippers.tres"),
-			preload("res://resources/chunk_def_funnel.tres"),
+			#preload("res://resources/chunk_def_spikes_static.tres"),
+			#preload("res://resources/chunk_def_spikes_moving.tres"),
+			#preload("res://resources/chunk_def_gauntlet.tres"),
+			#preload("res://resources/chunk_def_random_gate.tres"),
+			#preload("res://resources/chunk_def_zigzag.tres"),
+			#preload("res://resources/chunk_def_side_flippers.tres"),
+			#preload("res://resources/chunk_def_funnel.tres"),
 			preload("res://resources/chunk_def_bumper_pit.tres"),
 			preload("res://resources/chunk_def_corridor.tres"),
-			preload("res://resources/chunk_def_skill.tres"),
-			preload("res://resources/chunk_def_quarter_pipe.tres"),
-			preload("res://resources/chunk_def_half_pipe.tres"),
+			#preload("res://resources/chunk_def_skill.tres"),
+			#preload("res://resources/chunk_def_quarter_pipe.tres"),
+			#preload("res://resources/chunk_def_half_pipe.tres"),
 		]
 
 
@@ -230,6 +238,7 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, level_index: int = 1
 			var prev_bottom: Vector2 = (last_root.get_node("ConnectBottom") as Node2D).global_position
 			var top: Node2D = root.get_node("ConnectTop") as Node2D
 			root.global_position = prev_bottom - top.position
+		_normalize_side_walls(root)
 		WorldPainter.paint(root)
 		last_root = root
 
@@ -260,6 +269,38 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, level_index: int = 1
 		"hazard_speed_mult": hazard_speed_mult,
 		"sequence": sequence_names,
 	}
+
+
+## Snaps a chunk's screen-edge side walls (WallLeft / WallRight sitting near
+## the arena edges) to one canonical width and inner face. Adjacent chunks
+## then form a single flush column with no ledge to snag the ball. Walls
+## deliberately placed far inward (tight chunks like the gauntlet) sit well
+## away from the edge and are intentionally left untouched.
+func _normalize_side_walls(root: Node) -> void:
+	for child in root.get_children():
+		if not (child is StaticBody2D):
+			continue
+		var body := child as StaticBody2D
+		if body.name == "WallLeft" and body.position.x < 90.0:
+			_snap_edge_wall(body, LEFT_WALL_INNER - EDGE_WALL_WIDTH * 0.5)
+		elif body.name == "WallRight" and body.position.x > 550.0:
+			_snap_edge_wall(body, RIGHT_WALL_INNER + EDGE_WALL_WIDTH * 0.5)
+
+
+## Rewrites one edge wall to the canonical width at the given centre x,
+## keeping its authored height. A fresh shape is used so shared SubResources
+## are never mutated.
+func _snap_edge_wall(body: StaticBody2D, center_x: float) -> void:
+	var cs := body.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if cs == null or not (cs.shape is RectangleShape2D):
+		return
+	var height: float = (cs.shape as RectangleShape2D).size.y
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(EDGE_WALL_WIDTH, height)
+	cs.shape = shape
+	cs.position = Vector2.ZERO
+	cs.rotation = 0.0
+	body.position.x = center_x
 
 
 ## Recursively multiplies the `speed` of every moving_hazard mover under the

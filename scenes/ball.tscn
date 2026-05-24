@@ -1,25 +1,25 @@
-[gd_scene load_steps=4 format=3 uid="uid://cballpin01"]
+[gd_scene format=3 uid="uid://cballpin01"]
 
-[ext_resource type="Script" path="res://scripts/ball.gd" id="1"]
+[ext_resource type="Script" uid="uid://cihgygx15nv01" path="res://scripts/ball.gd" id="1"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball"]
-bounce = 0.5
 friction = 0.1
+bounce = 0.5
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ball"]
 radius = 6.5
 
-[node name="Ball" type="RigidBody2D"]
+[node name="Ball" type="RigidBody2D" unique_id=549114538]
 collision_layer = 2
-collision_mask = 1
 mass = 0.32
-gravity_scale = 0.95
 physics_material_override = SubResource("PhysicsMaterial_ball")
-continuous_cd = 2
+gravity_scale = 0.95
 can_sleep = false
+continuous_cd = 2
 linear_damp = 0.02
 angular_damp = 1.4
 script = ExtResource("1")
+max_speed = 1000.0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=269011004]
 shape = SubResource("CircleShape2D_ball")
