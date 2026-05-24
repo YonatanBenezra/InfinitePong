@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelConfig" load_steps=8 format=3 uid="uid://clevelcfg1"]
+
+[ext_resource type="Script" path="res://scripts/chunks/level_config.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/chunks/chunk_def_start.tres" id="2_start"]
+[ext_resource type="Resource" path="res://resources/chunks/chunk_def_finale.tres" id="3_finale"]
+[ext_resource type="Resource" path="res://resources/chunks/chunk_def_flip_std.tres" id="4_a"]
+[ext_resource type="Resource" path="res://resources/chunks/chunk_def_flip_drop.tres" id="4_b"]
+[ext_resource type="Resource" path="res://resources/chunks/chunk_def_flip_inverted.tres" id="4_c"]
+[ext_resource type="Resource" path="res://resources/chunks/chunk_def_bumper_pit.tres" id="4_d"]
+[ext_resource type="Resource" path="res://resources/chunks/chunk_def_corridor.tres" id="4_e"]
+
+[resource]
+script = ExtResource("1")
+min_chunks = 10
+max_chunks = 14
+target_difficulty_budget = 24
+max_pick_attempts_per_slot = 64
+chunk_pool = Array[Resource("res://scripts/chunks/chunk_definition.gd")]([ExtResource("4_a"), ExtResource("4_b"), ExtResource("4_c"), ExtResource("4_d"), ExtResource("4_e")])
+start_chunk = ExtResource("2_start")
+finale_chunk = ExtResource("3_finale")

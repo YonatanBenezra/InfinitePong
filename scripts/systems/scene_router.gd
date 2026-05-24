@@ -8,7 +8,7 @@ extends Node
 
 const BOOT := "res://scenes/ui/splash.tscn"
 const MENU := "res://scenes/ui/main_menu.tscn"
-const GAME := "res://scenes/main.tscn"
+const GAME := "res://scenes/game/game.tscn"
 const LEVEL_SELECT := "res://scenes/ui/level_select.tscn"
 const RESULTS := "res://scenes/ui/results.tscn"
 const SETTINGS := "res://scenes/ui/settings.tscn"

@@ -1,0 +1,58 @@
+[gd_scene load_steps=5 format=3 uid="uid://cmainpin01"]
+
+[ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/chunks/chunk_generator.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/camera/vertical_camera.gd" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ball/ball.tscn" id="4"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1")
+ball_scene = ExtResource("4")
+
+[node name="World" type="Node2D" parent="."]
+process_mode = 1
+
+[node name="ChunkGenerator" type="Node" parent="."]
+process_mode = 1
+script = ExtResource("2")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+process_mode = 1
+position = Vector2(320, 200)
+limit_left = -120
+limit_right = 760
+limit_top = -3000
+limit_bottom = 60000
+script = ExtResource("3")
+arena_center_x = 320.0
+smoothing_speed = 12.0
+look_ahead = 0.22
+max_look_ahead_px = 140.0
+max_catchup_distance = 360.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Vignette" type="ColorRect" parent="CanvasLayer"]
+mouse_filter = 2
+offset_right = 640.0
+offset_bottom = 720.0
+color = Color(0.85, 0.1, 0.15, 1)
+modulate = Color(1, 1, 1, 0)
+
+[node name="SfxFlip" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxHit" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxDeath" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxWin" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxHazard" type="AudioStreamPlayer" parent="."]
+bus = "Master"
+
+[node name="SfxRicochet" type="AudioStreamPlayer" parent="."]
+bus = "Master"
