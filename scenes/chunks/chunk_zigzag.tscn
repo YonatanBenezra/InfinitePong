@@ -9,16 +9,16 @@ size = Vector2(240, 18)
 [node name="ChunkZigzag" type="Node2D"]
 
 [node name="ConnectTop" type="Marker2D" parent="."]
-position = Vector2(320, 0)
+position = Vector2(0, 0)
 
 [node name="ConnectBottom" type="Marker2D" parent="."]
-position = Vector2(320, 480)
+position = Vector2(0, 480)
 
 [node name="BallSpawn" type="Marker2D" parent="."]
-position = Vector2(320, 48)
+position = Vector2(0, 48)
 
 [node name="WallLeft" type="StaticBody2D" parent="."]
-position = Vector2(36, 240)
+position = Vector2(-284, 240)
 collision_layer = 1
 collision_mask = 0
 
@@ -26,7 +26,7 @@ collision_mask = 0
 shape = SubResource("Rect_wall_tall")
 
 [node name="WallRight" type="StaticBody2D" parent="."]
-position = Vector2(604, 240)
+position = Vector2(284, 240)
 collision_layer = 1
 collision_mask = 0
 
@@ -34,7 +34,7 @@ collision_mask = 0
 shape = SubResource("Rect_wall_tall")
 
 [node name="ShelfA" type="StaticBody2D" parent="."]
-position = Vector2(200, 130)
+position = Vector2(-120, 130)
 rotation = 0.18
 collision_layer = 1
 collision_mask = 0
@@ -43,7 +43,7 @@ collision_mask = 0
 shape = SubResource("Rect_shelf")
 
 [node name="ShelfB" type="StaticBody2D" parent="."]
-position = Vector2(440, 260)
+position = Vector2(120, 260)
 rotation = -0.18
 collision_layer = 1
 collision_mask = 0
@@ -52,7 +52,7 @@ collision_mask = 0
 shape = SubResource("Rect_shelf")
 
 [node name="ShelfC" type="StaticBody2D" parent="."]
-position = Vector2(200, 380)
+position = Vector2(-120, 380)
 rotation = 0.18
 collision_layer = 1
 collision_mask = 0

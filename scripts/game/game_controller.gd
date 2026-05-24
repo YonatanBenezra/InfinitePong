@@ -360,7 +360,7 @@ func _regenerate_level(advance: bool) -> void:
 	if _generator:
 		_rng.seed = _level_seed
 		var info: Dictionary = _generator.build_level(_world, _rng, _level_index)
-		var spawn: Vector2 = info.get("spawn_global", Vector2(320, 80))
+		var spawn: Vector2 = info.get("spawn_global", Vector2(0, 80))
 		_level_bottom_y = float(info.get("bottom_y", 4000.0))
 		_level_top_y = spawn.y
 		_spawn_ball_if_needed()

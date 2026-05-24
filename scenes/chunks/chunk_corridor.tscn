@@ -16,23 +16,23 @@ size = Vector2(40, 320)
 [node name="ChunkCorridor" type="Node2D" unique_id=891427662]
 
 [node name="ConnectTop" type="Marker2D" parent="." unique_id=1708267097]
-position = Vector2(320, 0)
+position = Vector2(0, 0)
 
 [node name="ConnectBottom" type="Marker2D" parent="." unique_id=1214466875]
-position = Vector2(320, 540)
+position = Vector2(0, 540)
 
 [node name="BallSpawn" type="Marker2D" parent="." unique_id=1255517062]
-position = Vector2(320, 48)
+position = Vector2(0, 48)
 
 [node name="OuterWallLeft" type="StaticBody2D" parent="." unique_id=186424177]
-position = Vector2(36, 280)
+position = Vector2(-284, 280)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OuterWallLeft" unique_id=179872010]
 shape = SubResource("Rect_outer_wall")
 
 [node name="BumperTop" type="StaticBody2D" parent="." unique_id=1714466379]
-position = Vector2(60, 50)
+position = Vector2(-260, 50)
 rotation = 0.785398
 collision_mask = 0
 
@@ -40,7 +40,7 @@ collision_mask = 0
 shape = SubResource("RectangleShape2D_cywn3")
 
 [node name="BumperTop2" type="StaticBody2D" parent="." unique_id=963973851]
-position = Vector2(580, 49.999973)
+position = Vector2(260, 49.999973)
 rotation = 0.785398
 collision_mask = 0
 
@@ -48,21 +48,21 @@ collision_mask = 0
 shape = SubResource("RectangleShape2D_cywn3")
 
 [node name="OuterWallRight" type="StaticBody2D" parent="." unique_id=558792004]
-position = Vector2(604, 280)
+position = Vector2(284, 280)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OuterWallRight" unique_id=1592764461]
 shape = SubResource("Rect_outer_wall")
 
 [node name="InnerWallLeft" type="StaticBody2D" parent="." unique_id=1091124345]
-position = Vector2(180, 395)
+position = Vector2(-140, 395)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InnerWallLeft" unique_id=1100263643]
 shape = SubResource("Rect_inner_wall")
 
 [node name="InnerWallRight" type="StaticBody2D" parent="." unique_id=2011692348]
-position = Vector2(460, 395)
+position = Vector2(140, 395)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InnerWallRight" unique_id=1106469606]
@@ -74,7 +74,7 @@ variant_a_path = NodePath("../VariantLeftHeavy")
 variant_b_path = NodePath("../VariantRightHeavy")
 
 [node name="VariantLeftHeavy" type="Node2D" parent="." unique_id=1656138982]
-position = Vector2(0, 75)
+position = Vector2(-320, 75)
 
 [node name="SpikeL1" parent="VariantLeftHeavy" unique_id=1076932387 instance=ExtResource("1")]
 position = Vector2(220, 230)
@@ -89,7 +89,7 @@ position = Vector2(220, 430)
 position = Vector2(420, 360)
 
 [node name="VariantRightHeavy" type="Node2D" parent="." unique_id=448117351]
-position = Vector2(0, 75)
+position = Vector2(-320, 75)
 
 [node name="SpikeR1" parent="VariantRightHeavy" unique_id=305585803 instance=ExtResource("1")]
 position = Vector2(420, 230)
@@ -104,11 +104,11 @@ position = Vector2(420, 430)
 position = Vector2(220, 360)
 
 [node name="FlipMountRight2" type="Node2D" parent="." unique_id=412716227]
-position = Vector2(441, 235)
+position = Vector2(121, 235)
 rotation = -3.1415923
 
 [node name="FlipperStandard" parent="FlipMountRight2" unique_id=490754327 instance=ExtResource("3_6krck")]
 mirror = true
 
 [node name="FlipperStandard" parent="." unique_id=654680200 instance=ExtResource("3_6krck")]
-position = Vector2(200, 235)
+position = Vector2(-120, 235)

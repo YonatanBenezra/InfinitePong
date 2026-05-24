@@ -9,16 +9,16 @@ size = Vector2(220, 18)
 [node name="ChunkFunnel" type="Node2D"]
 
 [node name="ConnectTop" type="Marker2D" parent="."]
-position = Vector2(320, 0)
+position = Vector2(0, 0)
 
 [node name="ConnectBottom" type="Marker2D" parent="."]
-position = Vector2(320, 520)
+position = Vector2(0, 520)
 
 [node name="BallSpawn" type="Marker2D" parent="."]
-position = Vector2(320, 48)
+position = Vector2(0, 48)
 
 [node name="WallLeft" type="StaticBody2D" parent="."]
-position = Vector2(36, 260)
+position = Vector2(-284, 260)
 collision_layer = 1
 collision_mask = 0
 
@@ -26,7 +26,7 @@ collision_mask = 0
 shape = SubResource("Rect_wall_tall")
 
 [node name="WallRight" type="StaticBody2D" parent="."]
-position = Vector2(604, 260)
+position = Vector2(284, 260)
 collision_layer = 1
 collision_mask = 0
 
@@ -34,7 +34,7 @@ collision_mask = 0
 shape = SubResource("Rect_wall_tall")
 
 [node name="SlopeA" type="StaticBody2D" parent="."]
-position = Vector2(220, 150)
+position = Vector2(-100, 150)
 rotation = 0.34
 collision_layer = 1
 collision_mask = 0
@@ -43,7 +43,7 @@ collision_mask = 0
 shape = SubResource("Rect_slope")
 
 [node name="SlopeB" type="StaticBody2D" parent="."]
-position = Vector2(440, 290)
+position = Vector2(120, 290)
 rotation = -0.34
 collision_layer = 1
 collision_mask = 0
@@ -52,7 +52,7 @@ collision_mask = 0
 shape = SubResource("Rect_slope")
 
 [node name="SlopeC" type="StaticBody2D" parent="."]
-position = Vector2(220, 430)
+position = Vector2(-100, 430)
 rotation = 0.34
 collision_layer = 1
 collision_mask = 0

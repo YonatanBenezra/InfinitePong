@@ -11,16 +11,16 @@ size = Vector2(120, 16)
 [node name="ChunkSpikesStatic" type="Node2D"]
 
 [node name="ConnectTop" type="Marker2D" parent="."]
-position = Vector2(320, 0)
+position = Vector2(0, 0)
 
 [node name="ConnectBottom" type="Marker2D" parent="."]
-position = Vector2(320, 360)
+position = Vector2(0, 360)
 
 [node name="BallSpawn" type="Marker2D" parent="."]
-position = Vector2(320, 48)
+position = Vector2(0, 48)
 
 [node name="WallLeft" type="StaticBody2D" parent="."]
-position = Vector2(110, 180)
+position = Vector2(-210, 180)
 collision_layer = 1
 collision_mask = 0
 
@@ -28,7 +28,7 @@ collision_mask = 0
 shape = SubResource("Rect_wall_narrow")
 
 [node name="WallRight" type="StaticBody2D" parent="."]
-position = Vector2(530, 180)
+position = Vector2(210, 180)
 collision_layer = 1
 collision_mask = 0
 
@@ -36,7 +36,7 @@ collision_mask = 0
 shape = SubResource("Rect_wall_narrow")
 
 [node name="DiagLeft" type="StaticBody2D" parent="."]
-position = Vector2(230, 90)
+position = Vector2(-90, 90)
 rotation = 0.4
 collision_layer = 1
 collision_mask = 0
@@ -45,7 +45,7 @@ collision_mask = 0
 shape = SubResource("Rect_diag")
 
 [node name="DiagRight" type="StaticBody2D" parent="."]
-position = Vector2(410, 90)
+position = Vector2(90, 90)
 rotation = -0.4
 collision_layer = 1
 collision_mask = 0
@@ -54,13 +54,13 @@ collision_mask = 0
 shape = SubResource("Rect_diag")
 
 [node name="Spike1" parent="." instance=ExtResource("1")]
-position = Vector2(200, 180)
+position = Vector2(-120, 180)
 
 [node name="Spike2" parent="." instance=ExtResource("1")]
-position = Vector2(440, 200)
+position = Vector2(120, 200)
 
 [node name="Spike3" parent="." instance=ExtResource("1")]
-position = Vector2(240, 280)
+position = Vector2(-80, 280)
 
 [node name="Spike4" parent="." instance=ExtResource("1")]
-position = Vector2(400, 300)
+position = Vector2(80, 300)

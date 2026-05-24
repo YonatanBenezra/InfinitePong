@@ -11,16 +11,16 @@ size = Vector2(150, 20)
 [node name="ChunkQuarterPipe" type="Node2D"]
 
 [node name="ConnectTop" type="Marker2D" parent="."]
-position = Vector2(320, 0)
+position = Vector2(0, 0)
 
 [node name="ConnectBottom" type="Marker2D" parent="."]
-position = Vector2(320, 440)
+position = Vector2(0, 440)
 
 [node name="BallSpawn" type="Marker2D" parent="."]
-position = Vector2(320, 48)
+position = Vector2(0, 48)
 
 [node name="WallLeft" type="StaticBody2D" parent="."]
-position = Vector2(40, 220)
+position = Vector2(-280, 220)
 collision_layer = 1
 collision_mask = 0
 
@@ -28,7 +28,7 @@ collision_mask = 0
 shape = SubResource("Rect_wall_tall")
 
 [node name="WallRight" type="StaticBody2D" parent="."]
-position = Vector2(600, 220)
+position = Vector2(280, 220)
 collision_layer = 1
 collision_mask = 0
 
@@ -36,7 +36,7 @@ collision_mask = 0
 shape = SubResource("Rect_wall_tall")
 
 [node name="GuideTop" type="StaticBody2D" parent="."]
-position = Vector2(320, 110)
+position = Vector2(0, 110)
 rotation = 0.45
 collision_layer = 1
 collision_mask = 0
@@ -45,7 +45,7 @@ collision_mask = 0
 shape = SubResource("Rect_ledge")
 
 [node name="QuarterPipe" type="StaticBody2D" parent="."]
-position = Vector2(340, 150)
+position = Vector2(20, 150)
 collision_layer = 1
 collision_mask = 0
 script = ExtResource("1")

@@ -35,7 +35,7 @@ Grouped by gameplay concern, so each folder maps cleanly to one feature.
 | `ball/`      | `ball.gd`, `ball_skin_renderer.gd`                                |
 | `flippers/`  | `flipper_flat.gd`, `flipper_standard.gd`                          |
 | `hazards/`   | `hazard_spike.gd`, `moving_hazard.gd`                             |
-| `chunks/`    | `chunk_definition.gd`, `chunk_generator.gd`, `chunk_randomizer.gd`, `curved_ramp.gd`, `level_config.gd` |
+| `chunks/`    | `arena.gd`, `chunk_definition.gd`, `chunk_generator.gd`, `chunk_randomizer.gd`, `curved_ramp.gd`, `level_config.gd` |
 | `camera/`    | `vertical_camera.gd` (Y-only follow with shake)                   |
 | `vfx/`       | `vfx.gd` (one-shot particle bursts), `world_painter.gd`           |
 | `audio/`     | `audio_synth.gd` (procedural SFX)                                 |
@@ -58,3 +58,17 @@ Grouped by gameplay concern, so each folder maps cleanly to one feature.
 - Chunk scenes are prefixed `chunk_` and chunk definitions `chunk_def_`.
 - Inspector-facing exports are grouped with `@export_group("...")` so
   related knobs cluster together in the editor.
+
+## Chunk coordinate convention
+
+Every chunk is authored on the **(0, 0)-centered** frame:
+
+- `x = 0` is the **center** of the arena.
+- The arena is 640 px wide, so the edges are at `x = ±320`.
+- Recommended edge walls sit at `x = ±284`.
+- `y = 0` is the **top** of the chunk (where `ConnectTop` sits).
+- `y` grows downward; `ConnectBottom` lives at `(0, chunk_height)`.
+
+The single source of truth for arena dimensions is
+`scripts/chunks/arena.gd`. See **`docs/chunks_guide.md`** for a diagram
+and the full chunk-building workflow.

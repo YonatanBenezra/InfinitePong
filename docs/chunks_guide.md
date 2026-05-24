@@ -10,9 +10,10 @@ any GDScript to author, tune, or remove chunks.
 ## TL;DR
 
 1. **Open Godot** and load this project.
-2. **Duplicate** an existing chunk in `scenes/chunks/` that is closest
-   to what you want.
-3. **Rearrange** the platforms, flippers and hazards inside it.
+2. **Duplicate `scenes/chunks/chunk_TEMPLATE.tscn`** (or an existing chunk
+   that's closest to what you want).
+3. **Place** platforms, flippers and hazards inside it. The chunk is
+   already centered around `(0, 0)` — see the diagram below.
 4. **Create** a matching `chunk_def_xxx.tres` in `resources/chunks/`
    (or duplicate an existing one and point its `scene` field at your new
    chunk).
@@ -20,15 +21,56 @@ any GDScript to author, tune, or remove chunks.
    `resources/levels/default_level_config.tres`.
 6. **Press F5** to playtest.
 
+## The coordinate frame — read this first
+
+Every chunk is authored on the **(0, 0)-centered** convention:
+
+```
+       (chunk-local coordinates)
+
+        -320           0           +320
+          │ ←——————— 640 ———————→ │     x = 0 is the CENTER
+   y=0 ──┼───────[ConnectTop]─────┼──   ← top of the chunk
+          │                       │
+          │      ┌─────────┐      │     authored content
+          │      │ BALL    │      │     lives at world
+          │      │ ↓       │      │     x ∈ [-320, +320]
+          │      │         │      │
+  WallL ──┤██   chunk body  ██├── WallR
+   -284   │██                ██│   +284
+          │██                ██│
+          │      ┌─────────┐      │
+          │      └─────────┘      │
+          │                       │
+  y=height┼─────[ConnectBottom]───┼──   ← bottom of the chunk
+          │                       │
+```
+
+| Concept                | Value                  |
+|------------------------|------------------------|
+| Arena width            | 640 px                 |
+| Center of the arena    | **x = 0**              |
+| Left edge of the arena | x = -320               |
+| Right edge             | x = +320               |
+| Recommended left wall  | **x = -284** (centered on its body) |
+| Recommended right wall | **x = +284**           |
+| Top of every chunk     | y = 0 (where `ConnectTop` sits) |
+| Bottom of every chunk  | y = chunk's authored height (where `ConnectBottom` sits) |
+
+These values are also exposed as named constants in
+`scripts/chunks/arena.gd` (`Arena.CENTER_X`, `Arena.LEFT_WALL_X`,
+`Arena.RIGHT_WALL_X`, …) — you can reference them if you ever write a
+custom chunk script.
+
 ## Anatomy of a chunk
 
 Every chunk scene must contain:
 
-| Node                              | Purpose                                                  |
-|-----------------------------------|----------------------------------------------------------|
-| Root `Node2D` named whatever      | The chunk container                                      |
-| Child `Marker2D` `ConnectTop`     | The point that snaps to the chunk above. Usually at y ≈ 0 |
-| Child `Marker2D` `ConnectBottom`  | The point the next chunk's `ConnectTop` will snap to     |
+| Node                              | Where it goes        | Purpose |
+|-----------------------------------|----------------------|---------|
+| Root `Node2D`                     | (0, 0)               | The chunk container |
+| Child `Marker2D` `ConnectTop`     | **(0, 0)**           | The point that snaps to the chunk above |
+| Child `Marker2D` `ConnectBottom`  | **(0, height)**      | The point the next chunk's `ConnectTop` snaps to |
 
 The **start chunk** must additionally contain a `Marker2D` called
 `BallSpawn` — the generator drops the ball there.
@@ -36,21 +78,26 @@ The **start chunk** must additionally contain a `Marker2D` called
 The **finale chunk** must contain an instance of
 `scenes/game/level_exit.tscn` so the run can end.
 
-Everything else (walls, platforms, kickers, flippers, hazards) is
-freeform. Use the existing chunks in `scenes/chunks/` as references.
+The **template** at `scenes/chunks/chunk_TEMPLATE.tscn` has all the
+required pieces pre-placed. Duplicate it to start a new chunk.
 
 ## Chunk geometry — best practices
 
-- The arena is **640 × 720 px** wide on screen. Edge walls should sit at
-  about `x = 36` (left) and `x = 604` (right) so the chunk seams stay
-  flush. The `ChunkGenerator` snaps any wall named `WallLeft` or
-  `WallRight` close to those positions to a canonical width — but
-  staying close in the authored chunk keeps the editor preview clean.
+- **Center everything around x = 0.** A platform that should sit in the
+  middle goes at `(0, y)`. A pair of symmetric platforms goes at
+  `(-100, y)` and `(+100, y)`.
+- **Use the edge walls at x = ±284** for the outer arena walls — that's
+  the canonical position the generator will snap to anyway, but starting
+  there keeps the editor preview matching the live game.
+- For *tighter* chunks (gauntlets, narrow corridors) place inward walls
+  at e.g. `x = ±180`. The generator's snap heuristic ignores anything
+  inside `x ∈ [-230, +230]` (see `Arena.EDGE_WALL_LEFT_THRESHOLD` /
+  `Arena.EDGE_WALL_RIGHT_THRESHOLD`).
 - Use **`StaticBody2D` + `CollisionShape2D` + `RectangleShape2D`** for
   walls and platforms. The `WorldPainter` autoload adds a matching
-  themed `Polygon2D` automatically so you never need to author visuals.
-- Keep `ConnectTop` near `y = 0` and `ConnectBottom` at the bottom of
-  the chunk. The vertical distance between them is the chunk's height.
+  themed `Polygon2D` automatically — you never need to author visuals.
+- `ConnectTop` is at `y = 0`, `ConnectBottom` is at the chunk's
+  authored height. The distance between them is the chunk's height.
 - Test the chunk in isolation by opening the `.tscn` and dropping a
   ball above it.
 
@@ -139,6 +186,26 @@ ramps everything up automatically as the player progresses:
 | 7+    | base + 3-6         | base + 24-48      | 6                    |
 
 Moving hazards also speed up by up to ~70% on the latest levels.
+
+## Half-pipes and quarter-pipes
+
+Curved ramps live in `scripts/chunks/curved_ramp.gd` (a `StaticBody2D`
+subclass called `CurvedRamp`). They're built procedurally from a fan of
+short rotated rectangles — Godot 2D has no native curved collider — and
+they integrate cleanly with everything else.
+
+You instance them as plain `Node` references in a chunk; the Inspector
+exposes the arc shape:
+
+- **arc_radius** — radius in pixels.
+- **start_angle_deg** / **end_angle_deg** — the arc's start/end. The
+  ramp's docstring documents which angles open which way (e.g. a
+  quarter-pipe opening up-right uses `0° → 90°`).
+- **thickness** — wall thickness in pixels.
+- **surface_color** / **edge_color** — visuals.
+
+See `scenes/chunks/chunk_half_pipe.tscn` and
+`scenes/chunks/chunk_quarter_pipe.tscn` for reference setups.
 
 ## Testing your chunk
 

@@ -52,13 +52,14 @@ const _DEFAULT_FINALE_PATH := "res://resources/chunks/chunk_def_finale.tres"
 
 const _MOVING_HAZARD_SCRIPT := "res://scripts/hazards/moving_hazard.gd"
 
-## Canonical screen-edge wall geometry. Authored chunks vary their side
-## walls by ~16 px, which would leave a ledge at every chunk seam for the
-## ball to snag on. Every edge wall is snapped to this single width + inner
-## face so the arena reads as one continuous, flush column.
-const EDGE_WALL_WIDTH := 80.0
-const LEFT_WALL_INNER := 60.0
-const RIGHT_WALL_INNER := 580.0
+## Canonical screen-edge wall geometry lives on `Arena` so chunks, the
+## generator, the camera, and the docs all share one source of truth.
+## See scripts/chunks/arena.gd.
+##
+## Authored chunks vary their side walls by ~16 px, which would leave a
+## ledge at every chunk seam for the ball to snag on. Every edge wall is
+## snapped to this single width + inner face so the arena reads as one
+## continuous, flush column.
 
 
 # Resolved per-build state — the active start / finale / pool after
@@ -299,10 +300,10 @@ func _normalize_side_walls(root: Node) -> void:
 		if not (child is StaticBody2D):
 			continue
 		var body := child as StaticBody2D
-		if body.name == "WallLeft" and body.position.x < 90.0:
-			_snap_edge_wall(body, LEFT_WALL_INNER - EDGE_WALL_WIDTH * 0.5)
-		elif body.name == "WallRight" and body.position.x > 550.0:
-			_snap_edge_wall(body, RIGHT_WALL_INNER + EDGE_WALL_WIDTH * 0.5)
+		if body.name == "WallLeft" and body.position.x < Arena.EDGE_WALL_LEFT_THRESHOLD:
+			_snap_edge_wall(body, Arena.LEFT_WALL_INNER_X - Arena.EDGE_WALL_WIDTH * 0.5)
+		elif body.name == "WallRight" and body.position.x > Arena.EDGE_WALL_RIGHT_THRESHOLD:
+			_snap_edge_wall(body, Arena.RIGHT_WALL_INNER_X + Arena.EDGE_WALL_WIDTH * 0.5)
 
 
 ## Rewrites one edge wall to the canonical width at the given centre x,
@@ -314,7 +315,7 @@ func _snap_edge_wall(body: StaticBody2D, center_x: float) -> void:
 		return
 	var height: float = (cs.shape as RectangleShape2D).size.y
 	var shape := RectangleShape2D.new()
-	shape.size = Vector2(EDGE_WALL_WIDTH, height)
+	shape.size = Vector2(Arena.EDGE_WALL_WIDTH, height)
 	cs.shape = shape
 	cs.position = Vector2.ZERO
 	cs.rotation = 0.0

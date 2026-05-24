@@ -7,7 +7,9 @@ extends Camera2D
 ## even when the ball briefly tunnels at high speed.
 
 @export var target_path: NodePath
-@export var arena_center_x: float = 320.0
+## X coordinate the camera pins to. With the (0,0)-centered chunk
+## convention this is 0 (see scripts/chunks/arena.gd → CENTER_X).
+@export var arena_center_x: float = 0.0
 @export var smoothing_speed: float = 12.0
 @export var look_ahead: float = 0.22
 @export var max_look_ahead_px: float = 140.0

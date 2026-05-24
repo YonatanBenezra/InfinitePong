@@ -14,30 +14,30 @@ size = Vector2(520, 28)
 [node name="ChunkFinale" type="Node2D" unique_id=910921836]
 
 [node name="ConnectTop" type="Marker2D" parent="." unique_id=775500764]
-position = Vector2(320, 0)
+position = Vector2(0, 0)
 
 [node name="ConnectBottom" type="Marker2D" parent="." unique_id=1624978597]
-position = Vector2(320, 340)
+position = Vector2(0, 340)
 
 [node name="BallSpawn" type="Marker2D" parent="." unique_id=91084495]
-position = Vector2(320, 48)
+position = Vector2(0, 48)
 
 [node name="WallLeft" type="StaticBody2D" parent="." unique_id=852714398]
-position = Vector2(48, 170)
+position = Vector2(-272, 170)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft" unique_id=1070591649]
 shape = SubResource("Rect_wall_short")
 
 [node name="WallRight" type="StaticBody2D" parent="." unique_id=1374781747]
-position = Vector2(592, 170)
+position = Vector2(272, 170)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight" unique_id=1701725699]
 shape = SubResource("Rect_wall_short")
 
 [node name="GuideLeft" type="StaticBody2D" parent="." unique_id=1398556100]
-position = Vector2(114, 210)
+position = Vector2(-206, 210)
 rotation = 0.7853982
 collision_mask = 0
 
@@ -45,7 +45,7 @@ collision_mask = 0
 shape = SubResource("Rect_diag")
 
 [node name="GuideRight" type="StaticBody2D" parent="." unique_id=528894912]
-position = Vector2(527.00006, 210.00002)
+position = Vector2(207.00006, 210.00002)
 rotation = -0.7853982
 collision_mask = 0
 
@@ -53,11 +53,11 @@ collision_mask = 0
 shape = SubResource("Rect_diag")
 
 [node name="Floor" type="StaticBody2D" parent="." unique_id=1616088936]
-position = Vector2(320, 340)
+position = Vector2(0, 340)
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Floor" unique_id=1205266473]
 shape = SubResource("Rect_floor")
 
 [node name="LevelExit" parent="." unique_id=1209512734 instance=ExtResource("1")]
-position = Vector2(320, 296)
+position = Vector2(0, 296)
