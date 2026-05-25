@@ -25,11 +25,11 @@ const HALF_WIDTH := WIDTH * 0.5  # = 320.0
 ## center" reads as Arena.CENTER_X instead of a literal 0.
 const CENTER_X := 0.0
 
-## Recommended position for the *body* (the center) of a left edge wall.
-## Walls are EDGE_WALL_WIDTH thick, so the inner face sits at
-## LEFT_WALL_INNER_X = LEFT_WALL_X + EDGE_WALL_WIDTH/2.
-const LEFT_WALL_X := -HALF_WIDTH + 36.0   # = -284.0
-const RIGHT_WALL_X := HALF_WIDTH - 36.0   # = 284.0
+## Canonical position for the *body* (the center) of a left edge wall.
+## Matches the runtime-normalized position so editor and game agree.
+## Inner face sits at LEFT_WALL_INNER_X = LEFT_WALL_X + EDGE_WALL_WIDTH/2 = -260.
+const LEFT_WALL_X := -300.0
+const RIGHT_WALL_X := 300.0
 
 ## Canonical edge-wall thickness used by chunk_generator's wall snap.
 ## Authored chunk walls may vary slightly; the generator forces them to

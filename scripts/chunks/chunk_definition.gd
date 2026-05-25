@@ -41,6 +41,13 @@ class_name ChunkDefinition
 ## `active_biome` decides which biomes are included in a given run.
 @export var biome: StringName = &""
 
+@export_group("Geometry")
+## Vertical length of this chunk in pixels (distance from ConnectTop to
+## ConnectBottom). The generator moves ConnectBottom to this Y at runtime,
+## so you can change the height here without opening the scene.
+## Set to 0 to use the scene's authored ConnectBottom position unchanged.
+@export_range(0, 2000, 10) var length: int = 0
+
 @export_group("Advanced (optional)")
 ## Free-form labels for filtering and analytics ("learner", "vertical",
 ## "puzzle", "curved", …). Not used by the generator today but searchable

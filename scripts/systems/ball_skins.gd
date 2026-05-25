@@ -1,12 +1,36 @@
 extends Node
 ## Autoload: ball skin (cosmetic) catalogue + equip state.
 ##
-## Each skin carries display metadata (name, rarity, description) and a
-## render config (style + colours) consumed by BallSkinRenderer. The system
-## is future-proofed for unlock gating — is_unlocked() is the single choke
-## point — but for now every skin is available.
+## "classic" is the only starter skin. Every other skin is gated behind an
+## achievement — SKIN_ACHIEVEMENTS maps skin id → achievement id.
+## is_unlocked() is the single choke point for all gating logic.
 
 const RARITY_ORDER := ["Common", "Rare", "Legendary", "Mythic", "Special"]
+
+## Maps skin id to the achievement id that unlocks it.
+## Skins not listed here are permanently locked (no unlock path).
+const SKIN_ACHIEVEMENTS := {
+	"slate":            "first_death",
+	"blue_glow":        "first_clear",
+	"verdant_glow":     "reach_l5",
+	"neon_pulse":       "reach_l10",
+	"ice_core":         "reach_l25",
+	"celestial_crown":  "reach_l40",
+	"dragon_eye":       "perfect_run",
+	"plasma_sphere":    "perfect_10",
+	"solar_core":       "flippers_100",
+	"lightning_orb":    "flippers_1000",
+	"frost_nova":       "distance_10k",
+	"magma_core":       "distance_100k",
+	"dark_matter":      "streak_5",
+	"void_walker":      "streak_15",
+	"cosmic_rift":      "level_10",
+	"galaxy_heart":     "level_25",
+	"singularity":      "world_3",
+	"nebula_drift":     "world_5",
+	"retro_arcade":     "explorer",
+	"pixel_hero":       "runs_100",
+}
 const RARITY_COLORS := {
 	"Common": Color(0.64, 0.69, 0.77),
 	"Rare": Color(0.40, 0.66, 0.96),
@@ -153,9 +177,25 @@ func rarity_color(rarity: String) -> Color:
 	return c
 
 
-## Future unlock hook. For now every skin is owned.
-func is_unlocked(_id: String) -> bool:
-	return true
+## "classic" is always owned. All others require the mapped achievement.
+func is_unlocked(id: String) -> bool:
+	if id == "classic":
+		return true
+	var ach_id: String = SKIN_ACHIEVEMENTS.get(id, "")
+	if ach_id == "":
+		return false
+	return Achievements.is_unlocked(ach_id)
+
+
+## Returns the achievement name that unlocks this skin, or "" if none.
+func unlock_hint(id: String) -> String:
+	var ach_id: String = SKIN_ACHIEVEMENTS.get(id, "")
+	if ach_id == "":
+		return ""
+	for def in Achievements.definitions:
+		if String(def["id"]) == ach_id:
+			return String(def["name"])
+	return ""
 
 
 func equipped_id() -> String:

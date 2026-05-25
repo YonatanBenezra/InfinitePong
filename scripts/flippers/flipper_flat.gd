@@ -48,9 +48,24 @@ var _kicked_this_press: bool = false
 
 func _ready() -> void:
 	add_to_group("player_flippers")
-	# sync_to_physics lets the plate push the RigidBody ball reliably.
 	sync_to_physics = true
 	_rest_local = position
+	_apply_sprites()
+
+
+func _apply_sprites() -> void:
+	var tex := SpriteBank.get_texture(SpriteBank.FLAT_FLIPPER)
+	if tex == null:
+		return  # keep the Polygon2D visuals defined in the scene
+	for name in ["Outline", "Visual", "Highlight", "TrimBottom",
+			"GripA", "GripB", "GripC"]:
+		var n := get_node_or_null(name)
+		if n:
+			n.visible = false
+	var spr := Sprite2D.new()
+	spr.texture = tex
+	spr.scale = Vector2(184.0 / float(tex.get_width()), 48.0 / float(tex.get_height()))
+	add_child(spr)
 
 
 func _physics_process(delta: float) -> void:
@@ -91,4 +106,5 @@ func _try_kick_overlapping_ball() -> bool:
 	if to_ball.dot(travel_dir) < -SURFACE_TOLERANCE:
 		return false
 	ball.linear_velocity += travel_dir * kick_impulse
+	GameEvents.ball_hit_flipper.emit()
 	return true

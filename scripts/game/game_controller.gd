@@ -76,6 +76,7 @@ func _ready() -> void:
 	GameEvents.level_completed.connect(_on_level_completed)
 	GameEvents.ball_hit.connect(_on_ball_hit)
 	GameEvents.ball_ricochet.connect(_on_ball_ricochet)
+	GameEvents.ball_hit_flipper.connect(_on_ball_hit_flipper)
 	GameEvents.flipper_fired.connect(_on_flipper_fired)
 	GameEvents.hazard_hit.connect(_on_hazard_hit)
 
@@ -495,7 +496,6 @@ func _on_level_completed() -> void:
 		return
 	_state = State.RESULTS
 	_play_sfx(_sfx_win)
-	_shake(10.0)
 	_flash(Color(0.25, 0.95, 0.4, 0.45))
 	if is_instance_valid(_ball):
 		VFX.burst(self, _ball.global_position, _world_def.get("accent", Color(1, 1, 1)), 36, 300.0, 0.8)
@@ -520,7 +520,6 @@ func _on_ball_hit(speed: float) -> void:
 	if speed < 220.0:
 		return
 	_play_sfx(_sfx_hit)
-	_shake(clampf((speed - 220.0) / 1400.0, 0.0, 1.0) * 6.0)
 	if speed > 600.0 and is_instance_valid(_ball):
 		VFX.burst(self, _ball.global_position,
 			_world_def.get("wall_trim", Color(1, 1, 1)), 6, 130.0, 0.35)
@@ -528,10 +527,13 @@ func _on_ball_hit(speed: float) -> void:
 
 func _on_ball_ricochet(speed: float) -> void:
 	_play_sfx(_sfx_ricochet)
-	_shake(clampf((speed - 900.0) / 300.0, 0.0, 1.0) * 8.0 + 2.0)
 	if is_instance_valid(_ball):
 		VFX.burst(self, _ball.global_position,
 			_world_def.get("accent", Color(1, 1, 1)), 12, 220.0, 0.45)
+
+
+func _on_ball_hit_flipper() -> void:
+	_shake(4.0)
 
 
 func _on_hazard_hit() -> void:
@@ -545,7 +547,6 @@ func _on_flipper_fired() -> void:
 	_last_flip_sfx = now
 	_run_flippers += 1
 	_play_sfx(_sfx_flip)
-	_shake(2.0)
 
 
 func _shake(amount: float) -> void:

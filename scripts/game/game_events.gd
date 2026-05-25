@@ -11,6 +11,7 @@ signal level_completed
 signal ball_hit(speed: float)
 signal ball_ricochet(speed: float)
 signal flipper_fired
+signal ball_hit_flipper
 signal hazard_hit
 
 # --- Run lifecycle (emitted by game_controller) ---

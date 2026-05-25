@@ -51,9 +51,33 @@ var _kicked_this_press: bool = false
 
 func _ready() -> void:
 	add_to_group("player_flippers")
-	# sync_to_physics lets the bar push the RigidBody ball reliably.
 	sync_to_physics = true
 	rotation_degrees = _eff_rest()
+	_apply_sprites()
+
+
+func _apply_sprites() -> void:
+	var bar_tex := SpriteBank.get_texture(SpriteBank.FLIPPER_BAR)
+	if bar_tex == null:
+		return  # keep the Polygon2D visuals defined in the scene
+	# Hide the authored polygon visual nodes.
+	for name in ["Outline", "Visual", "VisualTrim", "VisualHighlight",
+			"PivotRingOuter", "PivotDot", "PivotRing"]:
+		var n := get_node_or_null(name)
+		if n:
+			n.visible = false
+	# Bar sprite — centered along the bar from pivot to tip.
+	var bar := Sprite2D.new()
+	bar.texture = bar_tex
+	bar.scale = Vector2(bar_length / float(bar_tex.get_width()), 1.0)
+	bar.position = Vector2(bar_length * 0.5, 0.0)
+	add_child(bar)
+	# Pivot sprite — sits at the rotation origin.
+	var pivot_tex := SpriteBank.get_texture(SpriteBank.FLIPPER_PIVOT)
+	if pivot_tex != null:
+		var pivot := Sprite2D.new()
+		pivot.texture = pivot_tex
+		add_child(pivot)
 
 
 func _eff_rest() -> float:
@@ -118,4 +142,5 @@ func _try_kick_overlapping_ball() -> bool:
 	# Tip of the bar has more leverage than the base.
 	var leverage := lerpf(0.55, 1.0, along / bar_length)
 	ball.linear_velocity += kick_dir * kick_impulse * leverage
+	GameEvents.ball_hit_flipper.emit()
 	return true

@@ -99,13 +99,13 @@ func make_label(text: String, size: int = 18, color: Color = TEXT) -> Label:
 func panel_style(fill: Color = PANEL, border: Color = Color(1, 1, 1, 0.10)) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = fill
-	s.set_corner_radius_all(16)
+	s.set_corner_radius_all(4)
 	s.set_border_width_all(2)
 	s.border_color = border
 	s.set_content_margin_all(22)
-	s.shadow_color = Color(0, 0, 0, 0.55)
-	s.shadow_size = 22
-	s.shadow_offset = Vector2(0, 8)
+	s.shadow_color = Color(0, 0, 0, 0.45)
+	s.shadow_size = 10
+	s.shadow_offset = Vector2(0, 4)
 	return s
 
 
@@ -120,20 +120,20 @@ func make_panel(fill: Color = PANEL) -> PanelContainer:
 func _style(bg: Color, border: Color, border_w: int, glow: float, glow_color: Color) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = bg
-	s.set_corner_radius_all(11)
+	s.set_corner_radius_all(3)
 	s.set_border_width_all(border_w)
 	s.border_color = border
-	s.content_margin_left = 26
-	s.content_margin_right = 26
-	s.content_margin_top = 14
-	s.content_margin_bottom = 14
+	s.content_margin_left = 20
+	s.content_margin_right = 20
+	s.content_margin_top = 10
+	s.content_margin_bottom = 10
 	if glow > 0.0:
-		s.shadow_color = Color(glow_color.r, glow_color.g, glow_color.b, 0.55)
-		s.shadow_size = int(glow)
+		s.shadow_color = Color(glow_color.r, glow_color.g, glow_color.b, 0.35)
+		s.shadow_size = int(glow * 0.5)
 	else:
-		s.shadow_color = Color(0, 0, 0, 0.35)
-		s.shadow_size = 6
-		s.shadow_offset = Vector2(0, 3)
+		s.shadow_color = Color(0, 0, 0, 0.25)
+		s.shadow_size = 4
+		s.shadow_offset = Vector2(0, 2)
 	return s
 
 
@@ -143,7 +143,7 @@ func make_button(text: String, accent_color: Color = Color(0, 0, 0, 0), icon_kin
 	var btn := Button.new()
 	btn.text = text
 	btn.focus_mode = Control.FOCUS_ALL
-	btn.add_theme_font_size_override("font_size", 21)
+	btn.add_theme_font_size_override("font_size", 18)
 	btn.add_theme_color_override("font_color", INK)
 	btn.add_theme_color_override("font_hover_color", INK)
 	btn.add_theme_color_override("font_focus_color", INK)
@@ -219,16 +219,16 @@ func _wire(btn: Button) -> void:
 	btn.mouse_entered.connect(func():
 		if btn.disabled:
 			return
-		pop.call(1.05, 0.16)
+		pop.call(1.02, 0.10)
 		play_hover())
-	btn.mouse_exited.connect(func(): pop.call(1.0, 0.12))
+	btn.mouse_exited.connect(func(): pop.call(1.0, 0.10))
 	btn.focus_entered.connect(func():
 		if btn.disabled:
 			return
-		pop.call(1.05, 0.16)
+		pop.call(1.02, 0.10)
 		play_hover())
-	btn.focus_exited.connect(func(): pop.call(1.0, 0.12))
-	btn.button_down.connect(func(): pop.call(0.97, 0.06))
+	btn.focus_exited.connect(func(): pop.call(1.0, 0.10))
+	btn.button_down.connect(func(): pop.call(0.98, 0.05))
 	btn.pressed.connect(func():
 		if btn.text.begins_with("‹"):
 			play_back()

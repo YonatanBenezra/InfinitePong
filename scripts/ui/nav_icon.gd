@@ -1,12 +1,34 @@
 extends Control
-## Small procedurally-drawn navigation icon — no art assets required.
-## Used as a left-aligned glyph on menu buttons.
+## Small navigation icon on menu buttons.
+## Uses a PNG sprite when one is available in SpriteBank; falls back to
+## the original procedural _draw() so nothing breaks before art is added.
 
 @export var kind: String = ""
 @export var icon_color: Color = Color.WHITE
 
+var _use_sprite := false
+
+
+func _ready() -> void:
+	var path := SpriteBank.icon_path(kind)
+	if path == "":
+		return
+	var tex := SpriteBank.get_texture(path)
+	if tex == null:
+		return
+	_use_sprite = true
+	var tr := TextureRect.new()
+	tr.texture = tex
+	tr.modulate = icon_color
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tr.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(tr)
+
 
 func _draw() -> void:
+	if _use_sprite:
+		return
 	var c := size * 0.5
 	var s := minf(size.x, size.y) * 0.42
 	var col := icon_color

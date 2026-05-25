@@ -1,3 +1,4 @@
+@tool
 extends StaticBody2D
 class_name CurvedRamp
 ## Procedural curved momentum surface — a quarter pipe / half pipe element.
@@ -22,34 +23,54 @@ class_name CurvedRamp
 ## Angle convention (degrees): a point at angle T sits at
 ## Vector2(cos T, sin T) * arc_radius in local space.
 ## 0 = right, 90 = down (Godot's Y is down), 180 = left, 270 = up.
+##
+## @tool makes the shape visible and live-updating in the editor — change any
+## export and the pipe redraws immediately without running the game.
 
 @export_group("Shape")
 ## Radius of the arc in pixels (distance from this node's origin to the
 ## surface the ball will ride on).
-@export_range(40.0, 600.0, 2.0) var arc_radius: float = 200.0
+@export_range(40.0, 600.0, 2.0) var arc_radius: float = 200.0:
+	set(v): arc_radius = v; _rebuild()
 ## Starting angle of the arc in degrees. See the docstring for which value
 ## faces which direction.
-@export_range(-360.0, 360.0, 1.0) var start_angle_deg: float = 0.0
+@export_range(-360.0, 360.0, 1.0) var start_angle_deg: float = 0.0:
+	set(v): start_angle_deg = v; _rebuild()
 ## Ending angle of the arc in degrees. The arc sweeps from start to end.
-@export_range(-360.0, 360.0, 1.0) var end_angle_deg: float = 90.0
+@export_range(-360.0, 360.0, 1.0) var end_angle_deg: float = 90.0:
+	set(v): end_angle_deg = v; _rebuild()
 ## Number of straight collision segments used to approximate the curve.
 ## 12 is plenty for a quarter pipe; raise it for very large arcs.
-@export_range(4, 64, 1) var segment_count: int = 12
+@export_range(4, 64, 1) var segment_count: int = 12:
+	set(v): segment_count = v; _rebuild()
 ## Thickness of the ramp wall in pixels.
-@export_range(8.0, 80.0, 1.0) var thickness: float = 26.0
+@export_range(8.0, 80.0, 1.0) var thickness: float = 26.0:
+	set(v): thickness = v; _rebuild()
 
 @export_group("Look")
 ## Fill colour of the ramp surface.
-@export var surface_color: Color = Color(0.55, 0.78, 0.95, 1.0)
+@export var surface_color: Color = Color(0.55, 0.78, 0.95, 1.0):
+	set(v): surface_color = v; _rebuild()
 ## Colour of the inner-edge highlight line. Helps the ride surface read
 ## clearly from above.
-@export var edge_color: Color = Color(0.82, 0.94, 1.0, 1.0)
+@export var edge_color: Color = Color(0.82, 0.94, 1.0, 1.0):
+	set(v): edge_color = v; _rebuild()
 
 
 func _ready() -> void:
-	# Behave like every other piece of level geometry.
 	collision_layer = 1
 	collision_mask = 0
+	_rebuild()
+
+
+func _rebuild() -> void:
+	if not is_inside_tree():
+		return
+	# Free all existing children before rebuilding so changes to any export
+	# produce a clean redraw in the editor and at runtime.
+	var existing := get_children()
+	for child in existing:
+		child.free()
 	_build()
 
 

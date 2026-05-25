@@ -221,6 +221,7 @@ func _make_tile(skin: Dictionary) -> Button:
 	var rarity := String(skin["rarity"])
 	var rcol: Color = BallSkins.rarity_color(rarity)
 	var equipped := id == BallSkins.equipped_id()
+	var locked := not BallSkins.is_unlocked(id)
 
 	var btn := Button.new()
 	btn.custom_minimum_size = Vector2(132, 168)
@@ -228,13 +229,16 @@ func _make_tile(skin: Dictionary) -> Button:
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		var s := StyleBoxFlat.new()
 		var hot: bool = state == "hover" or state == "pressed" or state == "focus"
-		s.bg_color = Color(0.11, 0.13, 0.20, 0.95)
+		s.bg_color = Color(0.07, 0.08, 0.13, 0.95) if locked else Color(0.11, 0.13, 0.20, 0.95)
 		s.set_corner_radius_all(12)
 		s.set_border_width_all(3 if equipped else 2)
-		s.border_color = UITheme.accent if equipped else Color(rcol.r, rcol.g, rcol.b, 0.85 if hot else 0.45)
-		if hot or equipped:
-			s.shadow_color = Color(rcol.r, rcol.g, rcol.b, 0.4)
-			s.shadow_size = 10
+		if locked:
+			s.border_color = Color(1, 1, 1, 0.18 if hot else 0.08)
+		else:
+			s.border_color = UITheme.accent if equipped else Color(rcol.r, rcol.g, rcol.b, 0.85 if hot else 0.45)
+			if hot or equipped:
+				s.shadow_color = Color(rcol.r, rcol.g, rcol.b, 0.4)
+				s.shadow_size = 10
 		btn.add_theme_stylebox_override(state, s)
 
 	var vb := VBoxContainer.new()
@@ -255,15 +259,18 @@ func _make_tile(skin: Dictionary) -> Button:
 	mini.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mini.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	mini.call("set_skin", skin)
+	mini.modulate.a = 0.30 if locked else 1.0
 	vb.add_child(mini)
 
-	var nm := UITheme.make_label(String(skin["name"]), 13, UITheme.TEXT)
+	var nm_col := UITheme.TEXT_FAINT if locked else UITheme.TEXT
+	var nm := UITheme.make_label(String(skin["name"]), 13, nm_col)
 	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	nm.autowrap_mode = TextServer.AUTOWRAP_OFF
 	nm.clip_text = true
 	vb.add_child(nm)
-	var rl := UITheme.make_label("EQUIPPED" if equipped else rarity.to_upper(),
-		11, UITheme.accent if equipped else rcol)
+	var rl_text := "EQUIPPED" if equipped else ("LOCKED" if locked else rarity.to_upper())
+	var rl_col := UITheme.accent if equipped else (UITheme.TEXT_FAINT if locked else rcol)
+	var rl := UITheme.make_label(rl_text, 11, rl_col)
 	rl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(rl)
 
@@ -275,16 +282,20 @@ func _make_tile(skin: Dictionary) -> Button:
 func _select(id: String, animate: bool) -> void:
 	_selected_id = id
 	var skin := BallSkins.get_skin(id)
+	var locked := not BallSkins.is_unlocked(id)
 	_preview.call("set_skin", skin)
+	_preview.modulate.a = 0.45 if locked else 1.0
 	_name_lbl.text = String(skin["name"])
 	var rarity := String(skin["rarity"])
 	_set_rarity_chip(rarity)
-	_desc_lbl.text = String(skin.get("desc", ""))
-	_panel_box.border_color = BallSkins.rarity_color(rarity)
+	var hint := BallSkins.unlock_hint(id)
+	_desc_lbl.text = ("Unlock via achievement:  " + hint) if locked else String(skin.get("desc", ""))
+	_panel_box.border_color = UITheme.TEXT_FAINT if locked else BallSkins.rarity_color(rarity)
 	_refresh_equip_button()
 	if animate:
 		UITheme.play_click()
-		_preview.call("punch", 1.14)
+		if not locked:
+			_preview.call("punch", 1.14)
 
 
 ## Recolours the rarity pill to the skin's rarity.
@@ -298,6 +309,10 @@ func _set_rarity_chip(rarity: String) -> void:
 
 
 func _refresh_equip_button() -> void:
+	if not BallSkins.is_unlocked(_selected_id):
+		_equip_btn.text = "LOCKED"
+		_equip_btn.disabled = true
+		return
 	var is_on := _selected_id == BallSkins.equipped_id()
 	_equip_btn.text = "EQUIPPED" if is_on else "EQUIP"
 	_equip_btn.disabled = is_on

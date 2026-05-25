@@ -256,6 +256,11 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, level_index: int = 1
 			var prev_bottom: Vector2 = (last_root.get_node("ConnectBottom") as Node2D).global_position
 			var top: Node2D = root.get_node("ConnectTop") as Node2D
 			root.global_position = prev_bottom - top.position
+		# Override ConnectBottom height if the definition specifies a length.
+		if def.length > 0:
+			var cb := root.get_node_or_null("ConnectBottom") as Node2D
+			if cb != null:
+				cb.position.y = float(def.length)
 		_normalize_side_walls(root)
 		WorldPainter.paint(root)
 		last_root = root
