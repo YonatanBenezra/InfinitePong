@@ -13,13 +13,13 @@ radius = 6.5
 collision_layer = 2
 mass = 0.32
 physics_material_override = SubResource("PhysicsMaterial_ball")
-gravity_scale = 0.65
+gravity_scale = 0.4875
 can_sleep = false
 continuous_cd = 2
 linear_damp = 0.06
 angular_damp = 1.4
 script = ExtResource("1")
-max_speed = 1000.0
+max_speed = 750.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=269011004]
 shape = SubResource("CircleShape2D_ball")

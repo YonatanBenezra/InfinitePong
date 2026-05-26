@@ -45,8 +45,23 @@ class_name ChunkDefinition
 ## Vertical length of this chunk in pixels (distance from ConnectTop to
 ## ConnectBottom). The generator moves ConnectBottom to this Y at runtime,
 ## so you can change the height here without opening the scene.
-## Set to 0 to use the scene's authored ConnectBottom position unchanged.
-@export_range(0, 2000, 10) var length: int = 0
+##
+## Pick a named preset from the dropdown — covers the useful range with
+## predictable steps. "Use scene default" inherits whatever the scene's
+## ConnectBottom already defines (the common case). If you genuinely need
+## an off-grid value, edit the .tres directly (e.g. `length = 425`); the
+## generator just reads the int and any positive number works.
+@export_enum(
+	"Use scene default:0",
+	"Tiny — 240 px:240",
+	"Short — 320 px:320",
+	"Compact — 400 px:400",
+	"Medium — 480 px:480",
+	"Tall — 560 px:560",
+	"Long — 640 px:640",
+	"Extra-long — 800 px:800",
+	"Giant — 1000 px:1000"
+) var length: int = 0
 
 @export_group("Advanced (optional)")
 ## Free-form labels for filtering and analytics ("learner", "vertical",

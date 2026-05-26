@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://cgluetrap1"]
+
+[ext_resource type="PackedScene" uid="uid://chglue001" path="res://scenes/hazards/hazard_glue.tscn" id="1"]
+
+[sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
+size = Vector2(80, 480)
+
+[node name="ChunkGlueTrap" type="Node2D"]
+
+[node name="ConnectTop" type="Marker2D" parent="."]
+position = Vector2(0, 0)
+
+[node name="ConnectBottom" type="Marker2D" parent="."]
+position = Vector2(0, 480)
+
+[node name="BallSpawn" type="Marker2D" parent="."]
+position = Vector2(0, 48)
+
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(-300, 240)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(300, 240)
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+shape = SubResource("Rect_wall_tall")
+
+[node name="HazardGlue" parent="." instance=ExtResource("1")]
+position = Vector2(-90, 160)
+
+[node name="HazardGlue2" parent="." instance=ExtResource("1")]
+position = Vector2(90, 290)
+
+[node name="HazardGlue3" parent="." instance=ExtResource("1")]
+position = Vector2(-30, 400)

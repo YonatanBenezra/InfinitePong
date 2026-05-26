@@ -75,14 +75,14 @@ shape = SubResource("Rect_diamond")
 position = Vector2(21, 223)
 rotation = 1.5707964
 active_offset = Vector2(-90, 0)
-kick_impulse = 320.0
+kick_impulse = 240.0
 contact_radius = 120.0
 
 [node name="InvertedGate2" parent="." unique_id=1712204854 instance=ExtResource("1")]
 position = Vector2(-20, 223)
 rotation = -1.5707964
 active_offset = Vector2(90, 0)
-kick_impulse = 320.0
+kick_impulse = 240.0
 contact_radius = 120.0
 
 [node name="HazardSpike" parent="." unique_id=649586948 instance=ExtResource("2_80rey")]

@@ -24,7 +24,7 @@ extends AnimatableBody2D
 ## Pixels per second the plate moves between rest and active positions.
 ## Plate travel ~10.8 px/step at 120 Hz — comfortably under the ball's
 ## ~13 px diameter, so the plate cannot tunnel a slow ball.
-@export_range(200.0, 4000.0, 50.0) var move_speed: float = 1300.0
+@export_range(200.0, 4000.0, 50.0) var move_speed: float = 975.0
 ## Local offset from rest to the held-down ("active") position. Y < 0 pops
 ## up, Y > 0 drops down; X offsets push the plate sideways.
 @export var active_offset: Vector2 = Vector2(0, -90)
@@ -32,7 +32,7 @@ extends AnimatableBody2D
 @export_group("Kick")
 ## Velocity bonus added to the ball when the flipper kicks it. Higher =
 ## the ball flies further off the plate.
-@export_range(100.0, 2000.0, 20.0) var kick_impulse: float = 600.0
+@export_range(100.0, 2000.0, 20.0) var kick_impulse: float = 450.0
 ## How close the ball has to be to the plate (in pixels) to receive the
 ## assist kick. The wider this is, the more forgiving the timing.
 @export_range(20.0, 240.0, 5.0) var contact_radius: float = 110.0

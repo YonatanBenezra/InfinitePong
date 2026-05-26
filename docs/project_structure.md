@@ -34,7 +34,8 @@ Grouped by gameplay concern, so each folder maps cleanly to one feature.
 |--------------|-------------------------------------------------------------------|
 | `ball/`      | `ball.gd`, `ball_skin_renderer.gd`                                |
 | `flippers/`  | `flipper_flat.gd`, `flipper_standard.gd`                          |
-| `hazards/`   | `hazard_spike.gd`, `moving_hazard.gd`                             |
+| `hazards/`   | `hazard_spike.gd`, `hazard_breakable.gd`, `hazard_glue.gd`, `moving_hazard.gd` |
+| `gameplay/`  | Reusable gameplay primitives — `path_mover.gd` (waypoint mover used by hazards, platforms, …) |
 | `chunks/`    | `arena.gd`, `chunk_definition.gd`, `chunk_generator.gd`, `chunk_randomizer.gd`, `curved_ramp.gd`, `level_config.gd` |
 | `camera/`    | `vertical_camera.gd` (Y-only follow with shake)                   |
 | `vfx/`       | `vfx.gd` (one-shot particle bursts), `world_painter.gd`           |

@@ -8,6 +8,10 @@ extends Node2D
 
 enum State { PLAYING, RESULTS, PAUSED }
 
+## Lives the player starts the session with. A death decrements; running out
+## ends the run and sends the player back to the menu.
+const STARTING_LIVES := 5
+
 @export var ball_scene: PackedScene
 @export var chunk_generator_path: NodePath = NodePath("ChunkGenerator")
 @export var ball_fall_grace_y: float = 600.0
@@ -15,6 +19,22 @@ enum State { PLAYING, RESULTS, PAUSED }
 ## Several flippers in a chunk fire on one key press; this gates both the
 ## flipper cue and the flipper counter so one press counts once.
 @export var flipper_sfx_cooldown: float = 0.09
+
+@export_group("Shooting")
+## Max ammo. Bullets cost 1 each; the magazine refills `reload_amount`
+## per qualifying contact, gated by `reload_cooldown`.
+@export_range(1, 30, 1) var max_ammo: int = 5
+## Bullets restored per contact tick. Stays at 1 by default so reloading
+## feels deliberate; raise for designers who want a faster recharge curve.
+@export_range(1, 10, 1) var reload_amount: int = 1
+## Seconds between collision-driven reload ticks. Stops one long bounce
+## off a wall from refilling the whole magazine in a single frame.
+@export_range(0.05, 5.0, 0.05) var reload_cooldown: float = 0.45
+## Velocity (px/s) applied to the ball in the OPPOSITE direction of each
+## shot. Raise for a stronger movement boost; lower for a gentler kick.
+@export_range(0.0, 1200.0, 10.0) var recoil_strength: float = 320.0
+## Bullet scene spawned per shot. Defaults to res://scenes/projectiles/bullet.tscn.
+@export var bullet_scene: PackedScene = preload("res://scenes/projectiles/bullet.tscn")
 
 @onready var _world: Node2D = $World
 @onready var _camera: Camera2D = $Camera2D
@@ -38,6 +58,12 @@ var _best_depth_pct: float = 0.0
 var _last_flip_sfx: float = -1.0
 var _level_index: int = 1
 var _level_seed: int = 0
+var _lives: int = STARTING_LIVES
+var _ammo: int = 5
+var _reload_cooldown_left: float = 0.0
+var _sfx_shoot: AudioStreamPlayer
+var _sfx_empty: AudioStreamPlayer
+var _sfx_bullet_hit: AudioStreamPlayer
 var _world_def: Dictionary = {}
 var _bg: Node2D
 var _results: Control
@@ -51,7 +77,9 @@ var _hud_track: Panel
 var _hud_depth_fill: ColorRect
 var _hud_depth_label: Label
 var _hud_time: Label
-var _hud_deaths: Label
+var _hud_lives: HBoxContainer
+var _hud_hearts: Array[Label] = []
+var _hud_ammo: Label
 var _fps_label: Label
 var _banner: Label
 var _hint: Label
@@ -70,12 +98,16 @@ func _ready() -> void:
 	_level_seed = randi()
 	var payload := SceneRouter.take_payload()
 	_level_index = maxi(int(payload.get("start_level", 1)), 1)
+	_lives = STARTING_LIVES
+	_ammo = max_ammo
+	_reload_cooldown_left = 0.0
 	_generator = get_node(chunk_generator_path) as ChunkGenerator
 
 	GameEvents.player_died.connect(_on_player_died)
 	GameEvents.level_completed.connect(_on_level_completed)
 	GameEvents.ball_hit.connect(_on_ball_hit)
 	GameEvents.ball_ricochet.connect(_on_ball_ricochet)
+	GameEvents.bullet_hit_hazard.connect(_on_bullet_hit_hazard)
 	GameEvents.ball_hit_flipper.connect(_on_ball_hit_flipper)
 	GameEvents.flipper_fired.connect(_on_flipper_fired)
 	GameEvents.hazard_hit.connect(_on_hazard_hit)
@@ -100,6 +132,11 @@ func _setup_background() -> void:
 
 
 func _setup_audio() -> void:
+	# Shoot / empty / bullet-hit aren't placed in the scene file; create
+	# them here so the gameplay scene stays minimal.
+	_sfx_shoot = _add_sfx_player()
+	_sfx_empty = _add_sfx_player()
+	_sfx_bullet_hit = _add_sfx_player()
 	var have_sfx := AudioServer.get_bus_index("Sfx") >= 0
 	for entry in [
 		[_sfx_flip, AudioSynth.flip_sound(), -6.0],
@@ -108,6 +145,9 @@ func _setup_audio() -> void:
 		[_sfx_win, AudioSynth.win_sound(), -2.0],
 		[_sfx_hazard, AudioSynth.hazard_sound(), -5.0],
 		[_sfx_ricochet, AudioSynth.ricochet_sound(), -8.0],
+		[_sfx_shoot, AudioSynth.shoot_sound(), -8.0],
+		[_sfx_empty, AudioSynth.empty_ammo_sound(), -10.0],
+		[_sfx_bullet_hit, AudioSynth.bullet_hit_sound(), -7.0],
 	]:
 		var player: AudioStreamPlayer = entry[0]
 		if player:
@@ -115,6 +155,12 @@ func _setup_audio() -> void:
 			player.volume_db = entry[2]
 			if have_sfx:
 				player.bus = "Sfx"
+
+
+func _add_sfx_player() -> AudioStreamPlayer:
+	var p := AudioStreamPlayer.new()
+	add_child(p)
+	return p
 
 
 # --- HUD ------------------------------------------------------------------
@@ -145,8 +191,11 @@ func _setup_hud() -> void:
 	row.add_child(left)
 	_hud_world = _hud_label("", 11, UITheme.TEXT_FAINT, HORIZONTAL_ALIGNMENT_LEFT)
 	_hud_level = _hud_label("", 20, UITheme.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
+	_hud_ammo = _hud_label("AMMO %d / %d" % [_ammo, max_ammo], 11,
+		UITheme.TEXT_FAINT, HORIZONTAL_ALIGNMENT_LEFT)
 	left.add_child(_hud_world)
 	left.add_child(_hud_level)
+	left.add_child(_hud_ammo)
 
 	# Centre: depth bar.
 	var center := VBoxContainer.new()
@@ -176,9 +225,18 @@ func _setup_hud() -> void:
 	right.custom_minimum_size = Vector2(120, 0)
 	row.add_child(right)
 	_hud_time = _hud_label("0:00", 20, UITheme.TEXT, HORIZONTAL_ALIGNMENT_RIGHT)
-	_hud_deaths = _hud_label("DEATHS 0", 11, UITheme.TEXT_FAINT, HORIZONTAL_ALIGNMENT_RIGHT)
+	_hud_lives = HBoxContainer.new()
+	_hud_lives.alignment = BoxContainer.ALIGNMENT_END
+	_hud_lives.add_theme_constant_override("separation", 3)
+	# One label per heart so we can recolour them independently as lives
+	# are lost (red = alive, faded grey = spent).
+	_hud_hearts.clear()
+	for i in STARTING_LIVES:
+		var heart := _hud_label("♥", 16, UITheme.DANGER, HORIZONTAL_ALIGNMENT_CENTER)
+		_hud_hearts.append(heart)
+		_hud_lives.add_child(heart)
 	right.add_child(_hud_time)
-	right.add_child(_hud_deaths)
+	right.add_child(_hud_lives)
 
 	# FPS readout.
 	_fps_label = _hud_label("", 12, Color(0.55, 0.9, 0.65), HORIZONTAL_ALIGNMENT_LEFT)
@@ -200,7 +258,7 @@ func _setup_hud() -> void:
 
 	# Controls hint along the bottom — fades out after each level start.
 	_hint = _hud_label(
-		"Hold  SPACE / CLICK  Flippers      R  Retry      ESC  Pause",
+		"Hold  SPACE  Flipper      LMB  Shoot + Flip      R  Retry      ESC  Pause",
 		13, UITheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	_hint.anchor_right = 1.0
 	_hint.anchor_top = 1.0
@@ -231,6 +289,8 @@ func _process(delta: float) -> void:
 	if _state != State.PLAYING or get_tree().paused:
 		return
 	_run_time += delta
+	if _reload_cooldown_left > 0.0:
+		_reload_cooldown_left = maxf(_reload_cooldown_left - delta, 0.0)
 	if is_instance_valid(_ball):
 		_run_distance += _ball.global_position.distance_to(_prev_ball_pos)
 		_prev_ball_pos = _ball.global_position
@@ -252,7 +312,16 @@ func _update_hud() -> void:
 	_hud_depth_fill.color = accent
 	_hud_depth_label.text = "DEPTH %d%%" % int(pct * 100.0)
 	_hud_time.text = _format_time(_run_time)
-	_hud_deaths.text = "DEATHS %d" % _deaths_this_level
+	# Light the first _lives hearts red; fade the rest to a spent grey.
+	for i in _hud_hearts.size():
+		var alive := i < _lives
+		var heart := _hud_hearts[i]
+		heart.add_theme_color_override("font_color",
+			UITheme.DANGER if alive else Color(0.32, 0.34, 0.40, 0.55))
+	if _hud_ammo != null:
+		_hud_ammo.text = "AMMO %d / %d" % [_ammo, max_ammo]
+		_hud_ammo.add_theme_color_override("font_color",
+			UITheme.DANGER if _ammo == 0 else UITheme.TEXT_FAINT)
 
 
 func _format_time(t: float) -> String:
@@ -281,6 +350,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				if _results_primary.is_valid():
 					_results_primary.call()
 		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("shoot") and _state == State.PLAYING:
+		_try_shoot()
+		# Don't consume — flippers still poll the same press as the
+		# "flipper" action and must keep working.
 
 
 # --- Pause ---------------------------------------------------------------
@@ -355,6 +429,10 @@ func _regenerate_level(advance: bool) -> void:
 	_run_flippers = 0
 	_run_distance = 0.0
 	_best_depth_pct = 0.0
+	# Every level start (advance OR retry) tops the magazine off so the
+	# player isn't dropped into a new layout already empty.
+	_ammo = max_ammo
+	_reload_cooldown_left = 0.0
 
 	_apply_world_theme()
 
@@ -467,6 +545,7 @@ func _build_result(outcome: String) -> Dictionary:
 		"flippers": _run_flippers,
 		"distance": _run_distance,
 		"deaths_this_level": _deaths_this_level,
+		"lives": _lives,
 		"no_death": win and _deaths_this_level == 0,
 		"score": score,
 	}
@@ -479,14 +558,17 @@ func _on_player_died() -> void:
 		return
 	_state = State.RESULTS
 	_deaths_this_level += 1
+	_lives = maxi(_lives - 1, 0)
 	_play_sfx(_sfx_death)
-	_shake(18.0)
 	_flash(Color(0.85, 0.1, 0.15, 0.55))
 	if is_instance_valid(_ball):
 		VFX.explode(self, _ball.global_position, _world_def.get("hazard", Color(1, 0.3, 0.4)))
 		_ball.visible = false
 		_ball.freeze = true
-	var result := _build_result("death")
+	# Out of lives ends the run and sends the player back to the menu;
+	# otherwise the run can be retried like before.
+	var outcome := "game_over" if _lives <= 0 else "death"
+	var result := _build_result(outcome)
 	GameEvents.run_ended.emit(result)
 	_show_results(result)
 
@@ -506,8 +588,14 @@ func _on_level_completed() -> void:
 
 
 func _show_results(result: Dictionary) -> void:
-	var win := String(result.get("outcome", "")) == "win"
-	_results_primary = Callable(self, "_next_level") if win else Callable(self, "_restart_level")
+	var outcome := String(result.get("outcome", ""))
+	if outcome == "win":
+		_results_primary = Callable(self, "_next_level")
+	elif outcome == "game_over":
+		# No retry — only path out is back to the menu.
+		_results_primary = Callable(self, "_go_to_menu")
+	else:
+		_results_primary = Callable(self, "_restart_level")
 	_results = Control.new()
 	_results.set_script(load("res://scripts/ui/results_overlay.gd"))
 	_canvas.add_child(_results)
@@ -517,23 +605,91 @@ func _show_results(result: Dictionary) -> void:
 # --- Feedback ------------------------------------------------------------
 
 func _on_ball_hit(speed: float) -> void:
+	# Wall / floor contacts also drip-feed the ammo magazine back up. A
+	# cooldown stops one long-running contact from refilling in a single
+	# burst. Reload doesn't require a "real" bounce — even a quiet contact
+	# counts — so the gate below applies only to the FX, not the reload.
+	_try_reload_from_contact()
 	if speed < 220.0:
 		return
 	_play_sfx(_sfx_hit)
+	# Small shake on a real bounce off a surface (the speed gate above keeps
+	# tiny rolls and brushes from triggering it).
+	_shake(3.0)
 	if speed > 600.0 and is_instance_valid(_ball):
 		VFX.burst(self, _ball.global_position,
 			_world_def.get("wall_trim", Color(1, 1, 1)), 6, 130.0, 0.35)
 
 
+func _try_reload_from_contact() -> void:
+	if _ammo >= max_ammo:
+		return
+	if _reload_cooldown_left > 0.0:
+		return
+	_ammo = mini(_ammo + reload_amount, max_ammo)
+	_reload_cooldown_left = reload_cooldown
+
+
+# --- Shooting -------------------------------------------------------------
+
+func _try_shoot() -> void:
+	if not is_instance_valid(_ball):
+		return
+	# A ball stuck in glue is in "aim and launch" mode — don't let the
+	# shoot binding overlap with that interaction.
+	if _ball.has_method("is_glue_stuck") and bool(_ball.call("is_glue_stuck")):
+		return
+	if _ammo <= 0:
+		_play_sfx(_sfx_empty)
+		return
+	var mouse_pos: Vector2 = _ball.get_global_mouse_position()
+	var dir: Vector2 = mouse_pos - _ball.global_position
+	if dir.length() < 1.0:
+		dir = Vector2.DOWN
+	dir = dir.normalized()
+	_ammo -= 1
+	_spawn_bullet(_ball.global_position, dir)
+	# Recoil — opposite the shot. Add to current velocity so the boost
+	# stacks with the ball's motion instead of replacing it.
+	_ball.linear_velocity += -dir * recoil_strength
+	_play_sfx(_sfx_shoot)
+	# Quick muzzle flash at the ball.
+	if is_instance_valid(_ball):
+		VFX.burst(self, _ball.global_position + dir * 8.0,
+			Color(1.0, 0.9, 0.5), 5, 160.0, 0.22)
+
+
+func _spawn_bullet(at_global: Vector2, dir: Vector2) -> void:
+	if bullet_scene == null:
+		push_error("GameController: bullet_scene is null")
+		return
+	var bullet := bullet_scene.instantiate() as Area2D
+	if bullet == null:
+		return
+	add_child(bullet)
+	bullet.global_position = at_global + dir * 10.0
+	if bullet.has_method("setup"):
+		bullet.call("setup", dir)
+
+
+func _on_bullet_hit_hazard(pos: Vector2) -> void:
+	_play_sfx(_sfx_bullet_hit)
+	VFX.burst(self, pos, Color(1.0, 0.85, 0.45), 8, 180.0, 0.3)
+
+
 func _on_ball_ricochet(speed: float) -> void:
 	_play_sfx(_sfx_ricochet)
+	# A ricochet is just a fast bounce — still a small shake, slightly
+	# stronger than a regular hit to match the audio cue.
+	_shake(5.0)
 	if is_instance_valid(_ball):
 		VFX.burst(self, _ball.global_position,
 			_world_def.get("accent", Color(1, 1, 1)), 12, 220.0, 0.45)
 
 
 func _on_ball_hit_flipper() -> void:
-	_shake(4.0)
+	# Big shake — the flipper just kicked the ball with force.
+	_shake(12.0)
 
 
 func _on_hazard_hit() -> void:

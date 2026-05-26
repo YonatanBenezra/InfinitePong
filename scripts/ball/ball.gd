@@ -7,12 +7,12 @@ extends RigidBody2D
 ## - spawn_impulse: initial downward+sideways push so the ball is never
 ##   stuck on the very first frame.
 
-@export var max_speed: float = 1200.0
+@export var max_speed: float = 900.0
 ## Hard cap on spin so a strong glancing hit can't set the ball spinning
 ## wildly (kept low because the ball is a circle — visible spin is noise).
-@export var max_angular_speed: float = 24.0
-@export var min_falling_speed: float = 45.0
-@export var min_horizontal_drift: float = 30.0
+@export var max_angular_speed: float = 18.0
+@export var min_falling_speed: float = 33.75
+@export var min_horizontal_drift: float = 22.5
 @export var radius: float = 6.5
 @export var ball_color: Color = Color(1.0, 0.97, 0.78)
 @export var ball_glow_color: Color = Color(1.0, 0.85, 0.35, 0.5)
@@ -20,15 +20,19 @@ extends RigidBody2D
 @export var hit_cooldown: float = 0.12
 ## Above this speed at the moment of impact, the contact is treated as a
 ## ricochet (distinct audio cue) rather than a generic thud.
-@export var ricochet_speed_threshold: float = 900.0
+@export var ricochet_speed_threshold: float = 675.0
 @export var trail_length: int = 14
 @export var trail_color: Color = Color(1.0, 0.9, 0.45, 0.55)
-@export var spawn_impulse: Vector2 = Vector2(0, 120)
+@export var spawn_impulse: Vector2 = Vector2(0, 90)
 
 var _trail_points: Array[Vector2] = []
 var _last_hit_time: float = -1.0
 var _skin: Dictionary = {}
 var _skin_time: float = 0.0
+## Set by a glue hazard when it captures the ball. While non-null, the
+## ball renders an aim trail toward the mouse so the player can pick
+## a launch direction.
+var _glue_owner: Node = null
 
 
 func _ready() -> void:
@@ -64,7 +68,30 @@ func _process(delta: float) -> void:
 	_trail_points.push_front(global_position)
 	if _trail_points.size() > trail_length:
 		_trail_points.resize(trail_length)
+	# While stuck in glue, the aim line moves with the mouse — force a
+	# redraw every frame so the trail stays anchored to the cursor.
 	queue_redraw()
+
+
+## Called by a glue hazard when it catches the ball. The ball stays
+## visually highlighted and renders an aim line toward the mouse cursor
+## until exit_glue_aim() is called by the same hazard.
+func enter_glue_aim(owner: Node = null) -> void:
+	_glue_owner = owner
+	queue_redraw()
+
+
+## Called by the glue hazard when the ball is released.
+func exit_glue_aim() -> void:
+	_glue_owner = null
+	queue_redraw()
+
+
+## True while a glue hazard currently holds the ball. Other systems (the
+## shoot input gate, the camera, …) read this so they don't fire actions
+## that don't make sense while the ball is pinned.
+func is_glue_stuck() -> bool:
+	return _glue_owner != null and is_instance_valid(_glue_owner)
 
 
 ## Applies a cosmetic ball skin. The skin fully defines the ball body and
@@ -80,7 +107,7 @@ func reset_ball(at_global: Vector2) -> void:
 	# overridden by the physics server, leaving the ball at its old spot
 	# (the "restart drops me where I died" bug). Driving the physics server
 	# state directly guarantees a true full-level restart from the top.
-	var impulse := spawn_impulse + Vector2((randf() - 0.5) * 60.0, 0.0)
+	var impulse := spawn_impulse + Vector2((randf() - 0.5) * 45.0, 0.0)
 	global_position = at_global
 	global_rotation = 0.0
 	linear_velocity = impulse
@@ -92,6 +119,9 @@ func reset_ball(at_global: Vector2) -> void:
 	PhysicsServer2D.body_set_state(rid, PhysicsServer2D.BODY_STATE_ANGULAR_VELOCITY, 0.0)
 	_last_hit_time = -1.0
 	_trail_points.clear()
+	# Any previous glue capture is meaningless after a full reset; clearing
+	# this stops the aim trail from drawing on a re-spawned ball.
+	_glue_owner = null
 
 
 func _on_body_entered(_body: Node) -> void:
@@ -124,3 +154,33 @@ func _draw() -> void:
 		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 28, outline_color, 2.0, true)
 	else:
 		BallSkinRenderer.paint(self, _skin, radius, _skin_time, rotation)
+	# Glue aim trail — drawn on top so the player always sees where the
+	# ball will launch, even when the body is mid-skin animation.
+	if _glue_owner != null and is_instance_valid(_glue_owner):
+		_draw_glue_aim()
+
+
+## Renders a fading dotted trail (with an arrowhead) from the ball toward
+## the mouse cursor, indicating the direction the ball will launch when
+## the glue is released.
+func _draw_glue_aim() -> void:
+	var local_mouse := to_local(get_global_mouse_position())
+	var dist := local_mouse.length()
+	if dist < radius + 4.0:
+		return
+	var dir := local_mouse / dist
+	var aim_len: float = minf(dist, 180.0)
+	var step: float = 14.0
+	var dot_count: int = maxi(int(aim_len / step), 1)
+	for i in range(1, dot_count + 1):
+		var t := float(i) / float(dot_count)
+		var p := dir * (float(i) * step)
+		var c := Color(1.0, 0.95, 0.55, lerpf(0.95, 0.18, t))
+		draw_circle(p, lerpf(3.0, 1.4, t), c)
+	# Arrowhead at the tip of the trail.
+	var tip := dir * aim_len
+	var perp := Vector2(-dir.y, dir.x)
+	var a := tip - dir * 9.0 + perp * 5.5
+	var b := tip - dir * 9.0 - perp * 5.5
+	draw_polygon(PackedVector2Array([tip, a, b]),
+		PackedColorArray([Color(1.0, 0.95, 0.55, 1.0)]))

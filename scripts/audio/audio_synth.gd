@@ -183,3 +183,60 @@ static func ui_back_sound() -> AudioStreamWAV:
 		var env := pow(1.0 - u, 1.2) * (1.0 - exp(-u * 100.0))
 		s[i] = sin(t * freq * TAU) * env * 0.26
 	return _pack(s)
+
+
+static func shoot_sound() -> AudioStreamWAV:
+	# Short percussive blip with a quick noise burst — feels like a kick
+	# without being loud or fatiguing on rapid fire.
+	var dur := 0.09
+	var n := int(dur * SR)
+	var s := PackedFloat32Array()
+	s.resize(n)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4242
+	for i in n:
+		var t := float(i) / float(SR)
+		var u := t / dur
+		var env := pow(1.0 - u, 0.7) * (1.0 - exp(-u * 200.0))
+		var freq := lerpf(720.0, 220.0, pow(u, 0.45))
+		var pulse := sin(t * freq * TAU)
+		var noise := (rng.randf() * 2.0 - 1.0) * pow(1.0 - u, 2.0) * 0.45
+		s[i] = (pulse * 0.55 + noise) * env * 0.42
+	return _pack(s)
+
+
+static func empty_ammo_sound() -> AudioStreamWAV:
+	# A two-tap dry click — "out of ammo" with no pitch flavour.
+	var dur := 0.10
+	var n := int(dur * SR)
+	var s := PackedFloat32Array()
+	s.resize(n)
+	for i in n:
+		var t := float(i) / float(SR)
+		# Two short clicks: 0.00–0.025s and 0.045–0.07s.
+		var env := 0.0
+		if t < 0.025:
+			env = pow(1.0 - t / 0.025, 1.4)
+		elif t > 0.045 and t < 0.07:
+			env = pow(1.0 - (t - 0.045) / 0.025, 1.4) * 0.85
+		var click := sin(t * 1200.0 * TAU) * 0.6 + sin(t * 1800.0 * TAU) * 0.3
+		s[i] = click * env * 0.32
+	return _pack(s)
+
+
+static func bullet_hit_sound() -> AudioStreamWAV:
+	# Crunchy short impact — bullet meets hazard.
+	var dur := 0.11
+	var n := int(dur * SR)
+	var s := PackedFloat32Array()
+	s.resize(n)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7311
+	for i in n:
+		var t := float(i) / float(SR)
+		var u := t / dur
+		var env := pow(1.0 - u, 1.2) * (1.0 - exp(-u * 140.0))
+		var crack := sin(t * lerpf(1400.0, 540.0, u) * TAU)
+		var noise := (rng.randf() * 2.0 - 1.0) * 0.35
+		s[i] = (crack * 0.55 + noise * 0.55) * env * 0.45
+	return _pack(s)

@@ -19,7 +19,7 @@ extends Node2D
 @export_range(8.0, 600.0, 1.0) var range_px: float = 120.0
 ## Linear speed in pixels per second when ease_amount is 0. With easing > 0
 ## this is the AVERAGE speed across one sweep — peak speed is higher.
-@export_range(20.0, 800.0, 5.0) var speed: float = 180.0
+@export_range(20.0, 800.0, 5.0) var speed: float = 135.0
 
 @export_group("Timing")
 ## Initial pause before the hazard starts moving. Use different values on

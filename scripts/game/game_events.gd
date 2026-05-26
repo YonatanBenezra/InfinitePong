@@ -13,6 +13,9 @@ signal ball_ricochet(speed: float)
 signal flipper_fired
 signal ball_hit_flipper
 signal hazard_hit
+## Emitted by a bullet the moment it damages a hazard. The position is
+## the hit point in world coords (useful for impact VFX / SFX).
+signal bullet_hit_hazard(pos: Vector2)
 
 # --- Run lifecycle (emitted by game_controller) ---
 signal run_started(level_index: int)

@@ -23,7 +23,19 @@ hazard always reads the same to the player. If you want a different
 look, edit `scenes/hazards/hazard_spike.tscn` directly; the visuals will
 update for every spike in every chunk.
 
+## Reusable path mover (`scripts/gameplay/path_mover.gd`)
+
+Prefer `PathMover` for any new movement work — moving hazards, moving
+platforms, moving flippers, anything that needs to travel through more
+than one point. Drop a `PathMover` into the scene, fill in `points`,
+parent the hazard / platform / object under it, done. See
+**`docs/path_mover_guide.md`** for the full recipe and patterns.
+
 ## Moving hazard (`scripts/hazards/moving_hazard.gd`)
+
+The original single-axis ping-pong mover. Existing chunks still use it
+and it remains supported. `PathMover` is the preferred new system; this
+section stays here as a reference for the chunks already using it.
 
 Any node can be made to ping-pong along an axis by parenting it under a
 `Node2D` with the `moving_hazard.gd` script attached. The script does

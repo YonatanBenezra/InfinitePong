@@ -36,11 +36,11 @@ extends AnimatableBody2D
 
 @export_group("Motion")
 ## Swing speed in degrees per second.
-@export_range(120.0, 2400.0, 30.0) var flick_speed_deg: float = 900.0
+@export_range(120.0, 2400.0, 30.0) var flick_speed_deg: float = 675.0
 
 @export_group("Kick")
 ## Velocity bonus added to the ball when the bar kicks it.
-@export_range(100.0, 2000.0, 20.0) var kick_impulse: float = 640.0
+@export_range(100.0, 2000.0, 20.0) var kick_impulse: float = 480.0
 ## How close the ball has to be to the bar (in pixels) to receive the
 ## assist kick.
 @export_range(16.0, 96.0, 2.0) var contact_radius: float = 44.0

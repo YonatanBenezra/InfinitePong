@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ChunkDefinition" format=3 uid="uid://cdefhlab1"]
+
+[ext_resource type="Script" uid="uid://dpwl6sm258das" path="res://scripts/chunks/chunk_definition.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://chazardlab1" path="res://scenes/chunks/chunk_hazard_lab.tscn" id="2"]
+
+[resource]
+script = ExtResource("1")
+scene = ExtResource("2")
+difficulty = 3
+weight = 1.0
+length = 480

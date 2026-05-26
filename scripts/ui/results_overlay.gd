@@ -7,7 +7,9 @@ func setup(result: Dictionary, on_primary: Callable, on_menu: Callable) -> void:
 	anchor_right = 1.0
 	anchor_bottom = 1.0
 
-	var win := String(result.get("outcome", "death")) == "win"
+	var outcome := String(result.get("outcome", "death"))
+	var win := outcome == "win"
+	var game_over := outcome == "game_over"
 	var accent: Color = UITheme.accent if win else UITheme.DANGER
 
 	var scrim := ColorRect.new()
@@ -30,10 +32,23 @@ func setup(result: Dictionary, on_primary: Callable, on_menu: Callable) -> void:
 	vb.add_theme_constant_override("separation", 12)
 	panel.add_child(vb)
 
-	var header := UITheme.make_title(
-		"LEVEL %d CLEARED" % int(result.get("level", 1)) if win else "GAME OVER",
-		34, accent)
+	var header_text: String
+	if win:
+		header_text = "LEVEL %d CLEARED" % int(result.get("level", 1))
+	elif game_over:
+		header_text = "GAME OVER"
+	else:
+		header_text = "TRY AGAIN"
+	var header := UITheme.make_title(header_text, 34, accent)
 	vb.add_child(header)
+
+	# When a life was just lost (but the run continues), tell the player
+	# how many lives they have left so the count change is legible.
+	if not win:
+		var lives_left := int(result.get("lives", 0))
+		var lives_text := ("OUT OF LIVES" if game_over
+			else "LIVES REMAINING  %d" % lives_left)
+		vb.add_child(UITheme.make_label(lives_text, 13, UITheme.TEXT_DIM))
 
 	vb.add_child(_divider())
 
@@ -51,7 +66,8 @@ func setup(result: Dictionary, on_primary: Callable, on_menu: Callable) -> void:
 	vb.add_child(_divider())
 
 	# Button.
-	var primary := UITheme.make_button("NEXT LEVEL" if win else "RETRY", accent)
+	var primary_text := "NEXT LEVEL" if win else ("MENU" if game_over else "RETRY")
+	var primary := UITheme.make_button(primary_text, accent)
 	primary.custom_minimum_size = Vector2(260, 0)
 	primary.pressed.connect(on_primary)
 	vb.add_child(primary)
