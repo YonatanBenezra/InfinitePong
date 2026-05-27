@@ -258,7 +258,7 @@ func _setup_hud() -> void:
 
 	# Controls hint along the bottom — fades out after each level start.
 	_hint = _hud_label(
-		"Hold  SPACE  Flipper      LMB  Shoot + Flip      R  Retry      ESC  Pause",
+		"Hold  SPACE  Flipper      LMB  Shoot      R  Retry      ESC  Pause",
 		13, UITheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	_hint.anchor_right = 1.0
 	_hint.anchor_top = 1.0
@@ -353,8 +353,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("shoot") and _state == State.PLAYING:
 		_try_shoot()
-		# Don't consume — flippers still poll the same press as the
-		# "flipper" action and must keep working.
 
 
 # --- Pause ---------------------------------------------------------------

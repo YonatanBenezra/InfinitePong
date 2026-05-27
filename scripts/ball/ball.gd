@@ -1,18 +1,37 @@
 extends RigidBody2D
-## Physics ball: momentum-based movement with stability clamps + trail.
+## Physics ball: momentum-based rolling movement with stability clamps + trail.
 ##
-## - max_speed: hard cap on velocity magnitude to keep the physics stable.
-## - min_speed_when_moving: if the ball is moving but slower than this,
-##   it gets a tiny nudge in its current direction to avoid resting.
-## - spawn_impulse: initial downward+sideways push so the ball is never
-##   stuck on the very first frame.
+## Design intent (rolling, not pinball):
+##  - Low restitution + high friction in the PhysicsMaterial so the ball
+##    grips surfaces and naturally rolls instead of skipping.
+##  - Per-step, contact-aware sliding: shallow / slow contacts have their
+##    residual normal velocity damped so the ball slides along the slope
+##    instead of micro-bouncing. Steep, fast contacts keep the full
+##    elastic bounce so flipper kicks and wall ricochets still feel
+##    snappy.
+##  - A patient stuck-timer replaces the old per-frame anti-rest nudge:
+##    only after the ball has truly stopped for ~0.4 s does a tiny
+##    downward kick fire, so flat ledges still resolve but rolling does
+##    not get jittered by random horizontal pushes.
+##  - max_speed: hard cap on velocity magnitude to keep the physics stable.
+##  - spawn_impulse: initial downward+sideways push so the ball is never
+##    stuck on the very first frame.
 
 @export var max_speed: float = 900.0
 ## Hard cap on spin so a strong glancing hit can't set the ball spinning
-## wildly (kept low because the ball is a circle — visible spin is noise).
-@export var max_angular_speed: float = 18.0
-@export var min_falling_speed: float = 33.75
-@export var min_horizontal_drift: float = 22.5
+## wildly. Bumped up vs. the old value because we now want the ball to
+## actually look like it's rolling — friction will give it real spin.
+@export var max_angular_speed: float = 28.0
+## After this long sitting essentially still, a tiny gravity-aligned
+## nudge fires so the ball never gets permanently parked on a flat
+## ledge. Replaces the old per-frame jitter so a slowly rolling ball is
+## NOT yanked around.
+@export var stuck_release_seconds: float = 0.4
+## Speed below which the stuck timer counts up.
+@export var stuck_speed_threshold: float = 18.0
+## Per-step velocity added downward once the stuck timer trips. Small
+## on purpose — gravity does the heavy lifting after the first nudge.
+@export var stuck_release_impulse: float = 90.0
 @export var radius: float = 6.5
 @export var ball_color: Color = Color(1.0, 0.97, 0.78)
 @export var ball_glow_color: Color = Color(1.0, 0.85, 0.35, 0.5)
@@ -21,14 +40,35 @@ extends RigidBody2D
 ## Above this speed at the moment of impact, the contact is treated as a
 ## ricochet (distinct audio cue) rather than a generic thud.
 @export var ricochet_speed_threshold: float = 675.0
-@export var trail_length: int = 14
-@export var trail_color: Color = Color(1.0, 0.9, 0.45, 0.55)
+## Trail point capacity. Higher = longer streak. Each _process tick
+## records the ball's current position, so trail length in seconds is
+## roughly trail_length / frame_rate.
+@export var trail_length: int = 28
+## Trail thickness at the ball end. Tapers to ~0 at the tail.
+@export var trail_width: float = 4.0
+@export var trail_color: Color = Color(1.0, 0.9, 0.45, 0.7)
 @export var spawn_impulse: Vector2 = Vector2(0, 90)
+
+## A contact whose normal makes a smaller angle than this with the ball's
+## incoming velocity is treated as a SHALLOW (slide) contact. Computed
+## as |v · n| / |v|: 0 = velocity parallel to surface, 1 = head-on.
+## 0.72 ≈ 44° — anything shallower than that rolls/slides instead of
+## bouncing, anything steeper keeps its full elastic bounce.
+@export var slide_perpendicularity_threshold: float = 0.72
+## A slow impact (post-bounce normal speed below this) is always treated
+## as a slide regardless of angle, so the ball can settle into a roll on
+## flat or gently-angled ledges without jittering.
+@export var slide_speed_threshold: float = 180.0
 
 var _trail_points: Array[Vector2] = []
 var _last_hit_time: float = -1.0
 var _skin: Dictionary = {}
 var _skin_time: float = 0.0
+## Tracks how long the ball has been sitting essentially still. While
+## > stuck_release_seconds the integrate-forces step injects a tiny
+## downward velocity so the player can always make progress on flat
+## terrain. Reset to 0 the moment real motion returns.
+var _stuck_timer: float = 0.0
 ## Set by a glue hazard when it captures the ball. While non-null, the
 ## ball renders an aim trail toward the mouse so the player can pick
 ## a launch direction.
@@ -55,12 +95,51 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	# Clamp spin after strong/glancing hits.
 	if absf(state.angular_velocity) > max_angular_speed:
 		state.angular_velocity = signf(state.angular_velocity) * max_angular_speed
-	# Anti-rest nudge: if the ball is essentially stationary, give it
-	# a small downward kick so gravity has something to amplify and
-	# the player is never permanently stuck on a flat ledge.
-	if absf(v.y) < min_falling_speed and absf(v.x) < min_horizontal_drift:
-		state.linear_velocity.y += min_falling_speed * 6.0 * state.step
-		state.linear_velocity.x += (randf() - 0.5) * min_horizontal_drift * 4.0 * state.step
+
+	# Contact-aware response. The physics solver has already reflected
+	# our velocity off any contacted surface this step (PhysicsMaterial
+	# bounce keeps a real pop for genuine ricochets). For shallow / slow
+	# contacts we want a pure SLIDE — roll/skim along the surface with
+	# no normal residue — so we project out the outward-normal component.
+	# For steep / fast contacts we leave the reflected velocity alone so
+	# flipper kicks and wall ricochets still feel snappy.
+	var contact_count := state.get_contact_count()
+	if contact_count > 0 and v.length_squared() > 1.0:
+		var changed := false
+		for i in contact_count:
+			var n := state.get_contact_local_normal(i)
+			if n == Vector2.ZERO:
+				continue
+			var v_normal := v.dot(n)
+			if v_normal <= 0.0:
+				continue  # already heading into / parallel to the surface
+			var v_len := v.length()
+			var perpendicularity: float = v_normal / v_len  # 0=tangent, 1=head-on
+			var steep := perpendicularity > slide_perpendicularity_threshold
+			var fast := v_normal > slide_speed_threshold
+			if steep and fast:
+				continue  # genuine bounce — let it ride
+			# Slide: strip the outward-normal component, keep tangent.
+			# Mild residual normal pop (5%) prevents the ball from
+			# being glued to the surface and missing the next gravity
+			# integration when the contact is a ledge corner.
+			v = v - n * v_normal * 0.95
+			changed = true
+		if changed:
+			state.linear_velocity = v
+
+	# Patient anti-rest nudge: only kick the ball when it has truly
+	# stopped moving for a sustained moment. The old per-frame jitter
+	# is what made shallow rolls feel chaotic — this never fires while
+	# the ball is rolling.
+	if v.length() < stuck_speed_threshold:
+		_stuck_timer += state.step
+		if _stuck_timer >= stuck_release_seconds:
+			state.linear_velocity.y += stuck_release_impulse * state.step
+			# Reset partway so we re-arm if the ball settles again.
+			_stuck_timer = stuck_release_seconds * 0.5
+	else:
+		_stuck_timer = 0.0
 
 
 func _process(delta: float) -> void:
@@ -119,6 +198,7 @@ func reset_ball(at_global: Vector2) -> void:
 	PhysicsServer2D.body_set_state(rid, PhysicsServer2D.BODY_STATE_ANGULAR_VELOCITY, 0.0)
 	_last_hit_time = -1.0
 	_trail_points.clear()
+	_stuck_timer = 0.0
 	# Any previous glue capture is meaningless after a full reset; clearing
 	# this stops the aim trail from drawing on a re-spawned ball.
 	_glue_owner = null
@@ -138,15 +218,7 @@ func _on_body_entered(_body: Node) -> void:
 
 
 func _draw() -> void:
-	# Trail (oldest = most faded + smallest).
-	var n := _trail_points.size()
-	for i in range(n - 1, 0, -1):
-		var t := float(i) / float(maxi(n - 1, 1))
-		var alpha := (1.0 - t) * trail_color.a
-		var r := radius * (1.0 - t * 0.85)
-		var p := to_local(_trail_points[i])
-		var c := Color(trail_color.r, trail_color.g, trail_color.b, alpha)
-		draw_circle(p, r, c)
+	_draw_trail()
 	# Skinned body. Falls back to the plain ball when no skin is applied.
 	if _skin.is_empty():
 		draw_circle(Vector2.ZERO, radius + 4.0, ball_glow_color)
@@ -158,6 +230,32 @@ func _draw() -> void:
 	# ball will launch, even when the body is mid-skin animation.
 	if _glue_owner != null and is_instance_valid(_glue_owner):
 		_draw_glue_aim()
+
+
+## Continuous fading line trail. Each consecutive pair of trail samples
+## is drawn as one antialiased segment whose width tapers and whose alpha
+## falls off toward the tail. This reads as a smooth painted ribbon
+## instead of the old dot string, and inherits its colour from the
+## active ball skin (apply_skin overwrites trail_color).
+func _draw_trail() -> void:
+	var n := _trail_points.size()
+	if n < 2:
+		return
+	# Front of the array is the newest sample (see _process). Render from
+	# tail to head so the brightest, thickest segment sits closest to the
+	# ball and naturally overlaps the older fainter ones.
+	for i in range(n - 1, 0, -1):
+		# t = 0 at the freshest segment, t ≈ 1 at the oldest.
+		var t := float(i) / float(n - 1)
+		var ease_t := t * t                       # cubic-ish falloff feels softer
+		var alpha := (1.0 - ease_t) * trail_color.a
+		if alpha <= 0.01:
+			continue
+		var width: float = maxf(trail_width * (1.0 - t * 0.85), 0.5)
+		var c := Color(trail_color.r, trail_color.g, trail_color.b, alpha)
+		var p_new := to_local(_trail_points[i - 1])
+		var p_old := to_local(_trail_points[i])
+		draw_line(p_old, p_new, c, width, true)
 
 
 ## Renders a fading dotted trail (with an arrowhead) from the ball toward

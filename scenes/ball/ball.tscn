@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://cihgygx15nv01" path="res://scripts/ball/ball.gd" id="1"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball"]
-friction = 0.1
-bounce = 0.5
+friction = 0.85
+bounce = 0.35
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ball"]
 radius = 6.5
@@ -13,11 +13,11 @@ radius = 6.5
 collision_layer = 2
 mass = 0.32
 physics_material_override = SubResource("PhysicsMaterial_ball")
-gravity_scale = 0.4875
+gravity_scale = 0.55
 can_sleep = false
 continuous_cd = 2
-linear_damp = 0.06
-angular_damp = 1.4
+linear_damp = 0.18
+angular_damp = 0.4
 script = ExtResource("1")
 max_speed = 750.0
 

@@ -1,8 +1,8 @@
 extends Area2D
 ## Glue trap: catches the ball on contact and holds it in place. While
 ## stuck, the player aims with the mouse — the ball draws an aim trail
-## toward the cursor — and pressing the flipper input (LMB / SPACE)
-## launches the ball with force in the aim direction.
+## toward the cursor — and pressing the flipper input (SPACE) launches
+## the ball with force in the aim direction.
 ##
 ## "Launch" here means assigning the ball a velocity; nothing is shot.
 ##
