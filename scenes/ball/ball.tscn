@@ -1,6 +1,7 @@
-[gd_scene format=3 uid="uid://cballpin01"]
+[gd_scene load_steps=4 format=3 uid="uid://cballpin01"]
 
 [ext_resource type="Script" uid="uid://cihgygx15nv01" path="res://scripts/ball/ball.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://bjts476xywael" path="res://assets/sprite_03.png" id="2"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ball"]
 friction = 0.85
@@ -23,3 +24,7 @@ max_speed = 750.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=269011004]
 shape = SubResource("CircleShape2D_ball")
+
+[node name="BallSprite" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2")

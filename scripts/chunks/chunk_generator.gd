@@ -249,13 +249,21 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, level_index: int = 1
 		if root == null:
 			push_error("Chunk scene root must be Node2D")
 			continue
-		world.add_child(root)
+		# Position the chunk BEFORE it enters the tree. Chunks contain
+		# sync_to_physics flippers whose physics body is created — and locked to
+		# its transform — the instant the node enters the tree. If we added the
+		# chunk at the origin and teleported it into place AFTERWARD, those
+		# bodies would lag behind the move and their move_toward() would visibly
+		# drag them into position over a second or two (the "slide in"). Placing
+		# first means every body is born already at its final spot, no slide.
+		# (`world` sits at the origin, so local position == global here.)
 		if last_root == null:
-			root.global_position = Vector2.ZERO
+			root.position = Vector2.ZERO
 		else:
 			var prev_bottom: Vector2 = (last_root.get_node("ConnectBottom") as Node2D).global_position
 			var top: Node2D = root.get_node("ConnectTop") as Node2D
-			root.global_position = prev_bottom - top.position
+			root.position = prev_bottom - top.position
+		world.add_child(root)
 		# Override ConnectBottom height if the definition specifies a length.
 		if def.length > 0:
 			var cb := root.get_node_or_null("ConnectBottom") as Node2D

@@ -81,7 +81,7 @@ var _hud_lives: HBoxContainer
 var _hud_hearts: Array[Label] = []
 var _hud_ammo: Label
 var _fps_label: Label
-var _banner: Label
+var _hud_world_name: Label
 var _hint: Label
 
 # --- Per-run metrics ---
@@ -190,10 +190,12 @@ func _setup_hud() -> void:
 	left.custom_minimum_size = Vector2(120, 0)
 	row.add_child(left)
 	_hud_world = _hud_label("", 11, UITheme.TEXT_FAINT, HORIZONTAL_ALIGNMENT_LEFT)
+	_hud_world_name = _hud_label("", 14, UITheme.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
 	_hud_level = _hud_label("", 20, UITheme.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
 	_hud_ammo = _hud_label("AMMO %d / %d" % [_ammo, max_ammo], 11,
 		UITheme.TEXT_FAINT, HORIZONTAL_ALIGNMENT_LEFT)
 	left.add_child(_hud_world)
+	left.add_child(_hud_world_name)
 	left.add_child(_hud_level)
 	left.add_child(_hud_ammo)
 
@@ -247,14 +249,6 @@ func _setup_hud() -> void:
 	_fps_label.offset_bottom = -4
 	_fps_label.visible = GameSettings.show_fps
 	_canvas.add_child(_fps_label)
-
-	# Centre level banner (fades on each level start).
-	_banner = UITheme.make_title("", 40)
-	_banner.anchor_right = 1.0
-	_banner.anchor_bottom = 0.5
-	_banner.offset_top = 150
-	_banner.modulate.a = 0.0
-	_canvas.add_child(_banner)
 
 	# Controls hint along the bottom — fades out after each level start.
 	_hint = _hud_label(
@@ -455,8 +449,8 @@ func _regenerate_level(advance: bool) -> void:
 	_invuln_until = Time.get_ticks_msec() / 1000.0 + spawn_invuln_seconds
 
 	_hud_world.text = "WORLD %d" % Worlds.world_index_for_level(_level_index)
+	_hud_world_name.text = String(_world_def.get("name", ""))
 	_hud_level.text = "LEVEL %d" % _level_index
-	_show_banner()
 	_show_controls_hint()
 
 	GameEvents.run_started.emit(_level_index)
@@ -470,21 +464,6 @@ func _restart_level() -> void:
 
 func _next_level() -> void:
 	_regenerate_level(true)
-
-
-func _show_banner() -> void:
-	if _banner == null:
-		return
-	_banner.text = "%s\nLEVEL %d" % [_world_def.get("name", ""), _level_index]
-	_banner.modulate.a = 0.0
-	_banner.scale = Vector2(0.9, 0.9)
-	_banner.pivot_offset = _banner.size * 0.5
-	var t := _banner.create_tween()
-	t.tween_property(_banner, "modulate:a", 1.0, 0.3)
-	t.parallel().tween_property(_banner, "scale", Vector2.ONE, 0.4) \
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	t.tween_interval(0.9)
-	t.tween_property(_banner, "modulate:a", 0.0, 0.5)
 
 
 ## Shows the controls reminder for the opening levels, then fades it out.

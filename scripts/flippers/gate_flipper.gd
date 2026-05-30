@@ -1,46 +1,38 @@
 extends AnimatableBody2D
-## Flat-plate flipper, built as a TWO-PART flat bumper:
-##  - the ORANGE bar (sprite_06) is the moving plate; pressing the flipper
-##    moves it along active_offset (unchanged).
-##  - the THREE PURPLE bars (sprite_08/09/10) are CHILDREN of this node, seated
-##    in the bar's slots, so they move and rotate WITH the bar and stay seated
-##    (they do not detach into the centre).
+## GATE flipper (the "flat flipper") - fully INDEPENDENT of the big slider
+## (scripts/flippers/flipper_flat.gd). Editing this file has no effect on the
+## big slider and vice-versa.
 ##
-## Two modes (designer-facing):
-##  - Default pop  (active_offset.y < 0): plate rests low, pops up when held.
-##  - Inverted drop (active_offset.y > 0): plate rests high, drops while held.
+## Two upright bars (one instance each) that SLIDE APART horizontally when the
+## flipper key is held, then slide back together. They NEVER rotate or tilt.
+##   Rest:  []   bars together, plungers facing the centre seam.
+##   Held:  [  ] each bar slides outward by open_offset, staying upright.
 ##
-## Reliability (the flat flipper is the one testers saw the ball pass
-## through, so this is deliberately conservative):
-##  - sync_to_physics = true so the moving plate transfers real momentum
-##    to the ball through the physics solver instead of teleporting past it.
-##  - The assist kick only ever pushes the ball AWAY from the plate.
+## Built two-part: the slotted bar (sprite_06) + three plungers
+## (sprite_08/09/10) seated as CHILDREN in the bar's slots, so they ride along
+## with the bar and stay seated (they are never repositioned by this script).
 
 @export_group("Motion")
-## Pixels per second the plate moves between rest and active positions.
-@export_range(200.0, 4000.0, 50.0) var move_speed: float = 975.0
-## Local offset from rest to the held-down ("active") position. Y < 0 pops
-## up, Y > 0 drops down; X offsets push the plate sideways.
-@export var active_offset: Vector2 = Vector2(0, -90)
+## How far each bar slides OUTWARD (away from the centre seam) when held, px.
+@export_range(0.0, 200.0, 2.0) var open_offset: float = 44.0
+## Slide speed in pixels per second (used opening and closing).
+@export_range(200.0, 4000.0, 50.0) var slide_speed: float = 520.0
+## Kick direction only (which way a contacted ball is launched). Does not move
+## the bar; the bar slides via open_offset.
+@export var active_offset: Vector2 = Vector2(-90, 0)
 
 @export_group("Kick")
-## Velocity bonus added to the ball when the flipper kicks it. Higher =
-## the ball flies further off the plate.
+## Velocity bonus added to a nearby ball when the flipper is pressed.
 @export_range(100.0, 2000.0, 20.0) var kick_impulse: float = 450.0
-## How close the ball has to be to the plate (in pixels) to receive the
-## assist kick. The wider this is, the more forgiving the timing.
+## How close the ball has to be (px) to receive the kick.
 @export_range(20.0, 240.0, 5.0) var contact_radius: float = 110.0
 
 @export_group("Plungers")
-## Plunger length as a fraction of the bar height (1.0 = the full bar). The
-## purple bar fills its slot down the bar's length.
+## Plunger length as a fraction of the bar height (1.0 = the full bar).
 @export_range(0.5, 1.0, 0.01) var plunger_length_ratio: float = 0.9
-## Plunger width as a multiple of the bar's slot width (1.0 = exactly fills
-## the slot). Drives how fully the purple fills the channel.
+## Plunger width as a multiple of the bar's slot width (1.0 = fills the slot).
 @export_range(0.6, 2.0, 0.05) var plunger_width_fill: float = 1.15
 
-## Two-part bar sprite (sprite_06) + the three plunger sprites that seat in
-## its slots (sprite_08 / 09 / 10).
 const BAR_TEX := "res://assets/sprite_06.png"
 const PLUNGER_TEX: Array[String] = [
 	"res://assets/sprite_08.png",
@@ -61,10 +53,9 @@ const POLY_NODES := ["Outline", "Visual", "Highlight", "TrimBottom",
 const SURFACE_TOLERANCE := 12.0
 
 var _rest_local: Vector2
+var _rest_rotation: float = 0.0
 var _was_active: bool = false
 var _kicked_this_press: bool = false
-## The purple plungers: children of this node, seated in the bar's slots so
-## they move and rotate with the bar.
 var _plungers: Array[Sprite2D] = []
 
 
@@ -72,16 +63,14 @@ func _ready() -> void:
 	add_to_group("player_flippers")
 	sync_to_physics = true
 	_rest_local = position
+	_rest_rotation = rotation
 	_apply_sprites()
 
 
-## Builds the two-part flat bumper: the slotted bar (sprite_06) is the sliding
-## plate; three plungers (sprite_08/09/10) FILL its slots, seated as children
-## so they move with the bar. Falls back to the authored polygons if the bar
-## art is missing.
+## Builds the slotted bar (sprite_06) + three plungers seated as children.
 func _apply_sprites() -> void:
 	if not ResourceLoader.exists(BAR_TEX):
-		return  # keep the Polygon2D visuals defined in the scene
+		return
 	var bar_tex := load(BAR_TEX) as Texture2D
 	if bar_tex == null:
 		return
@@ -115,8 +104,8 @@ func _build_plungers(plate: Vector2, bar_sx: float, bar_sy: float) -> void:
 		spr.scale = Vector2(
 			(SLOT_TEX_W * bar_sx * plunger_width_fill) / float(tex.get_width()),
 			(BAR_TEX_H * plunger_length_ratio * bar_sy) / float(tex.get_height()))
-		spr.z_index = 1  # in front so the purple fills and shows in its slot
-		# Seated centred in its slot (the slots are vertically centred).
+		spr.z_index = 1  # in front so the purple shows in its slot
+		# Seated centred in its slot; never repositioned (rides with the bar).
 		spr.position = Vector2((SLOT_TEX_X[i] - BAR_TEX_W * 0.5) * bar_sx, 0.0)
 		add_child(spr)
 		_plungers.append(spr)
@@ -130,6 +119,9 @@ func _plate_size() -> Vector2:
 
 
 func _physics_process(delta: float) -> void:
+	# Never rotate/tilt: lock to the placed (upright) orientation every frame.
+	rotation = _rest_rotation
+
 	var active := Input.is_action_pressed("flipper")
 	if active and not _was_active:
 		GameEvents.flipper_fired.emit()
@@ -138,13 +130,20 @@ func _physics_process(delta: float) -> void:
 		_kicked_this_press = false
 	_was_active = active
 
-	var target := _rest_local + active_offset if active else _rest_local
-	# Assist kick: any frame during the stroke where the ball is in contact,
+	# Slide purely HORIZONTALLY, away from the centre seam (x=0): the bar on the
+	# left goes left, the bar on the right goes right - no rotation, no crossing.
+	var dir := signf(_rest_local.x)
+	if dir == 0.0:
+		dir = signf(active_offset.x)
+	var target := _rest_local
+	if active:
+		target = Vector2(_rest_local.x + dir * open_offset, _rest_local.y)
+	# Assist kick: any frame during the slide where the ball is in contact,
 	# fired at most once per press.
 	if active and not _kicked_this_press and not position.is_equal_approx(target):
 		if _try_kick_overlapping_ball():
 			_kicked_this_press = true
-	position = position.move_toward(target, move_speed * delta)
+	position = position.move_toward(target, slide_speed * delta)
 
 
 func _try_kick_overlapping_ball() -> bool:
@@ -157,13 +156,11 @@ func _try_kick_overlapping_ball() -> bool:
 	var to_ball := ball.global_position - global_position
 	if to_ball.length() > contact_radius:
 		return false
-	var travel_dir := active_offset.normalized()
-	if travel_dir == Vector2.ZERO:
-		travel_dir = Vector2.UP
-	# Only kick a ball on the LEADING face of the plate (the side it travels
-	# toward), so the assist can never push the ball through the plate.
-	if to_ball.dot(travel_dir) < -SURFACE_TOLERANCE:
+	var kick_dir := active_offset.normalized()
+	if kick_dir == Vector2.ZERO:
+		kick_dir = Vector2.UP
+	if to_ball.dot(kick_dir) < -SURFACE_TOLERANCE:
 		return false
-	ball.linear_velocity += travel_dir * kick_impulse
+	ball.linear_velocity += kick_dir * kick_impulse
 	GameEvents.ball_hit_flipper.emit()
 	return true

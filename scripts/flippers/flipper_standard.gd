@@ -56,27 +56,71 @@ func _ready() -> void:
 	_apply_sprites()
 
 
+## Single flipper sprite. The round hub sits near the LEFT end; the bar
+## extends to the right toward the tip.
+const FLIPPER_TEX := "res://assets/sprite_04.png"
+## Measured hub (pivot) centre in sprite_04, in texels.
+const HUB := Vector2(21.2, 17.5)
+const POLY_NODES := ["Outline", "Visual", "VisualTrim", "VisualHighlight",
+		"PivotRingOuter", "PivotDot", "PivotRing"]
+
+
 func _apply_sprites() -> void:
+	# Legacy two-part bar+pivot sprites (SpriteBank) take priority if a
+	# project ever supplies them; otherwise use the single flipper sprite.
 	var bar_tex := SpriteBank.get_texture(SpriteBank.FLIPPER_BAR)
-	if bar_tex == null:
+	if bar_tex != null:
+		_apply_bar_pivot_sprites(bar_tex)
+		return
+	if not ResourceLoader.exists(FLIPPER_TEX):
 		return  # keep the Polygon2D visuals defined in the scene
-	# Hide the authored polygon visual nodes.
-	for name in ["Outline", "Visual", "VisualTrim", "VisualHighlight",
-			"PivotRingOuter", "PivotDot", "PivotRing"]:
+	var tex := load(FLIPPER_TEX) as Texture2D
+	if tex == null:
+		return
+	_hide_polys()
+	# Scale so the hub→right-edge span matches bar_length (pivot to tip).
+	var s := bar_length / float(tex.get_width() - HUB.x)
+	var spr := Sprite2D.new()
+	spr.texture = tex
+	spr.centered = true
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.modulate = Color.WHITE
+	spr.scale = Vector2(s, s)
+	# Set the sprite OFFSET so the round hub sits exactly on the rotation pivot
+	# (the node origin). The bar then extends along +X over the collision bar
+	# and rotates about the hub.
+	spr.offset = Vector2(tex.get_width() * 0.5 - HUB.x, tex.get_height() * 0.5 - HUB.y)
+	# Right flipper = the left flipper mirrored about the pivot. Its FlipMount
+	# already rotates this node 180° (a point reflection = H+V mirror), so the
+	# sprite only needs to cancel that rotation's VERTICAL half to land on the
+	# clean HORIZONTAL mirror requested — i.e. flip_v here, NOT flip_h (a
+	# literal flip_h on top of the 180° mount would point the bar to the wrong
+	# side and shift the hub off the pivot).
+	spr.flip_v = mirror
+	add_child(spr)
+
+
+func _hide_polys() -> void:
+	for name in POLY_NODES:
 		var n := get_node_or_null(name)
 		if n:
 			n.visible = false
-	# Bar sprite — centered along the bar from pivot to tip.
+
+
+## Legacy path: separate bar + pivot textures (kept for compatibility).
+func _apply_bar_pivot_sprites(bar_tex: Texture2D) -> void:
+	_hide_polys()
 	var bar := Sprite2D.new()
 	bar.texture = bar_tex
+	bar.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	bar.scale = Vector2(bar_length / float(bar_tex.get_width()), 1.0)
 	bar.position = Vector2(bar_length * 0.5, 0.0)
 	add_child(bar)
-	# Pivot sprite — sits at the rotation origin.
 	var pivot_tex := SpriteBank.get_texture(SpriteBank.FLIPPER_PIVOT)
 	if pivot_tex != null:
 		var pivot := Sprite2D.new()
 		pivot.texture = pivot_tex
+		pivot.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		add_child(pivot)
 
 

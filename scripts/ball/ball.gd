@@ -73,6 +73,10 @@ var _stuck_timer: float = 0.0
 ## ball renders an aim trail toward the mouse so the player can pick
 ## a launch direction.
 var _glue_owner: Node = null
+## Sprite2D body visual (sprite_03), shown as the default WHITE ball. Custom
+## (unlocked) skins still paint procedurally via BallSkinRenderer; the sprite
+## is hidden whenever one is equipped. See _use_sprite() / _update_body_visual().
+var _ball_sprite: Sprite2D = null
 
 
 func _ready() -> void:
@@ -80,6 +84,14 @@ func _ready() -> void:
 	contact_monitor = true
 	max_contacts_reported = 6
 	body_entered.connect(_on_body_entered)
+	_ball_sprite = get_node_or_null("BallSprite")
+	if _ball_sprite != null and _ball_sprite.texture != null:
+		# Centre on the body and match the collision radius. Tinted pure white
+		# (Color.WHITE modulate) so the ball always reads as white.
+		_ball_sprite.modulate = Color.WHITE
+		var fit := (radius * 2.0) / float(_ball_sprite.texture.get_width())
+		_ball_sprite.scale = Vector2(fit, fit)
+	_update_body_visual()
 	queue_redraw()
 
 
@@ -179,6 +191,21 @@ func apply_skin(skin: Dictionary) -> void:
 	_skin = skin
 	if skin.has("trail"):
 		trail_color = skin["trail"]
+	_update_body_visual()
+	queue_redraw()
+
+
+## True when the white sprite_03 body should be shown: no skin, or the
+## default "classic" skin (which is just a white ball). Any other equipped
+## skin uses the procedural BallSkinRenderer instead.
+func _use_sprite() -> bool:
+	return _ball_sprite != null and _ball_sprite.texture != null \
+		and (_skin.is_empty() or String(_skin.get("id", "")) == "classic")
+
+
+func _update_body_visual() -> void:
+	if _ball_sprite != null:
+		_ball_sprite.visible = _use_sprite()
 
 
 func reset_ball(at_global: Vector2) -> void:
@@ -219,8 +246,12 @@ func _on_body_entered(_body: Node) -> void:
 
 func _draw() -> void:
 	_draw_trail()
-	# Skinned body. Falls back to the plain ball when no skin is applied.
-	if _skin.is_empty():
+	# Body visual. Default / "classic" → the white sprite_03 node renders it
+	# (nothing to draw here). Custom skins paint procedurally. If the sprite
+	# texture is somehow missing we fall back to the old plain circle.
+	if _use_sprite():
+		pass
+	elif _skin.is_empty():
 		draw_circle(Vector2.ZERO, radius + 4.0, ball_glow_color)
 		draw_circle(Vector2.ZERO, radius, ball_color)
 		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 28, outline_color, 2.0, true)

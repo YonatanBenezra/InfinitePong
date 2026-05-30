@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cchunkfinv1"]
 
-[ext_resource type="PackedScene" uid="uid://cflipflat1" path="res://scenes/flippers/flipper_flat.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://bgateflip001" path="res://scenes/flippers/gate_flipper.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://cspikeha01" path="res://scenes/hazards/hazard_spike.tscn" id="2_80rey"]
 [ext_resource type="Script" uid="uid://bwp4g7s4mdvxh" path="res://scripts/chunks/chunk_randomizer.gd" id="3_502y3"]
 
