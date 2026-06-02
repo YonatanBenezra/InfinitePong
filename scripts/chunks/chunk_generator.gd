@@ -45,6 +45,8 @@ const _FALLBACK_POOL_PATHS := [
 	"res://resources/chunks/chunk_def_flip_inverted.tres",
 	"res://resources/chunks/chunk_def_bumper_pit.tres",
 	"res://resources/chunks/chunk_def_corridor.tres",
+	"res://resources/chunks/chunk_def_flip_inverted.tres",
+	"res://resources/chunks/chunk_def_skill.tres",
 ]
 const _DEFAULT_CONFIG_PATH := "res://resources/levels/default_level_config.tres"
 const _DEFAULT_START_PATH := "res://resources/chunks/chunk_def_start.tres"

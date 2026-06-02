@@ -9,3 +9,5 @@ scene = ExtResource("2")
 difficulty = 3
 weight = 0.3
 length = 480
+tags = null
+connection_tags = null

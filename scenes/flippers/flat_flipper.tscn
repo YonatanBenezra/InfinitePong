@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://dpxvf3dh3mxeh"]
+
+[ext_resource type="Script" path="res://scripts/flipper_flat.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
+size = Vector2(100, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_push"]
+size = Vector2(100, 18)
+
+[node name="FlatFlipper" type="Node2D" unique_id=851666673 groups=["flipper"]]
+script = ExtResource("1_script")
+
+[node name="Platform" type="AnimatableBody2D" parent="." unique_id=144499536]
+collision_layer = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform" unique_id=959633091]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Visual" type="Polygon2D" parent="Platform" unique_id=1056069733]
+color = Color(0.22, 0.48, 0.92, 1)
+polygon = PackedVector2Array(-50, -6, 50, -6, 50, 6, -50, 6)
+
+[node name="PushArea" type="Area2D" parent="Platform" unique_id=2057409759]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Platform/PushArea" unique_id=989935253]
+shape = SubResource("RectangleShape2D_push")

@@ -1,7 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://cchunkskl1"]
+[gd_scene format=3 uid="uid://cchunkskl1"]
 
-[ext_resource type="PackedScene" path="res://scenes/hazards/hazard_spike.tscn" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/flippers/flipper_standard.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://cspikeha01" path="res://scenes/hazards/hazard_spike.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://cflipstd01" path="res://scenes/flippers/flipper_standard.tscn" id="2"]
 
 [sub_resource type="RectangleShape2D" id="Rect_wall"]
 size = Vector2(80, 500)
@@ -12,80 +12,90 @@ size = Vector2(120, 16)
 [sub_resource type="RectangleShape2D" id="Rect_diamond"]
 size = Vector2(60, 60)
 
-[node name="ChunkSkill" type="Node2D"]
+[node name="ChunkSkill" type="Node2D" unique_id=918348846]
 
-[node name="ConnectTop" type="Marker2D" parent="."]
-position = Vector2(0, 0)
+[node name="ConnectTop" type="Marker2D" parent="." unique_id=168336974]
 
-[node name="ConnectBottom" type="Marker2D" parent="."]
+[node name="ConnectBottom" type="Marker2D" parent="." unique_id=1188563740]
 position = Vector2(0, 500)
 
-[node name="BallSpawn" type="Marker2D" parent="."]
+[node name="BallSpawn" type="Marker2D" parent="." unique_id=1920220502]
 position = Vector2(0, 48)
 
-[node name="WallLeft" type="StaticBody2D" parent="."]
+[node name="WallLeft" type="StaticBody2D" parent="." unique_id=1492280894]
 position = Vector2(-300, 250)
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft" unique_id=235280492]
 shape = SubResource("Rect_wall")
 
-[node name="WallRight" type="StaticBody2D" parent="."]
+[node name="WallRight" type="StaticBody2D" parent="." unique_id=1205289045]
 position = Vector2(300, 250)
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight" unique_id=1780248727]
 shape = SubResource("Rect_wall")
 
-[node name="DiagLeft" type="StaticBody2D" parent="."]
+[node name="DiagLeft" type="StaticBody2D" parent="." unique_id=155041978]
 position = Vector2(-105, 130)
 rotation = 0.45
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DiagLeft"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DiagLeft" unique_id=2052200119]
 shape = SubResource("Rect_diag")
 
-[node name="DiagRight" type="StaticBody2D" parent="."]
+[node name="DiagLeft2" type="StaticBody2D" parent="." unique_id=1109688920]
+position = Vector2(-226.00002, 388)
+rotation = 0.45
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DiagLeft2" unique_id=44647462]
+shape = SubResource("Rect_diag")
+
+[node name="DiagRight" type="StaticBody2D" parent="." unique_id=261235607]
 position = Vector2(105, 130)
 rotation = -0.45
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DiagRight"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DiagRight" unique_id=1296133254]
 shape = SubResource("Rect_diag")
 
-[node name="Spike1" parent="." instance=ExtResource("1")]
-position = Vector2(-130, 230)
-
-[node name="Spike2" parent="." instance=ExtResource("1")]
-position = Vector2(130, 230)
-
-[node name="CenterBumper" type="StaticBody2D" parent="."]
-position = Vector2(0, 290)
-rotation = 0.785398
-collision_layer = 1
+[node name="DiagRight2" type="StaticBody2D" parent="." unique_id=1688129934]
+position = Vector2(229.00003, 391)
+rotation = -0.45
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CenterBumper"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DiagRight2" unique_id=718026639]
+shape = SubResource("Rect_diag")
+
+[node name="Spike1" parent="." unique_id=461392897 instance=ExtResource("1")]
+position = Vector2(-130, 230)
+
+[node name="Spike2" parent="." unique_id=959249832 instance=ExtResource("1")]
+position = Vector2(130, 230)
+
+[node name="CenterBumper" type="StaticBody2D" parent="." unique_id=968305234]
+position = Vector2(0, 290)
+rotation = 0.785398
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CenterBumper" unique_id=1270516826]
 shape = SubResource("Rect_diamond")
 
-[node name="Spike3" parent="." instance=ExtResource("1")]
+[node name="Spike3" parent="." unique_id=888508417 instance=ExtResource("1")]
 position = Vector2(-100, 380)
 
-[node name="Spike4" parent="." instance=ExtResource("1")]
+[node name="Spike4" parent="." unique_id=1876196378 instance=ExtResource("1")]
 position = Vector2(100, 380)
 
-[node name="FlipMountLeft" type="Node2D" parent="."]
+[node name="FlipMountLeft" type="Node2D" parent="." unique_id=821614434]
 position = Vector2(-170, 420)
 
-[node name="FlipperStandard" parent="FlipMountLeft" instance=ExtResource("2")]
+[node name="FlipperStandard" parent="FlipMountLeft" unique_id=631177608 instance=ExtResource("2")]
 
-[node name="FlipMountRight" type="Node2D" parent="."]
+[node name="FlipMountRight" type="Node2D" parent="." unique_id=855747686]
 position = Vector2(170, 420)
 rotation = 3.141593
 
-[node name="FlipperStandard" parent="FlipMountRight" instance=ExtResource("2")]
+[node name="FlipperStandard" parent="FlipMountRight" unique_id=201174006 instance=ExtResource("2")]
 mirror = true

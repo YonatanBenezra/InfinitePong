@@ -1,4 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://cchunkslide"]
+[gd_scene format=3 uid="uid://cchunkslide"]
+
+[ext_resource type="PackedScene" uid="uid://bladespin001" path="res://scenes/hazards/blade.tscn" id="1_a76hc"]
 
 [sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
 size = Vector2(80, 380)
@@ -6,47 +8,47 @@ size = Vector2(80, 380)
 [sub_resource type="RectangleShape2D" id="Rect_nub"]
 size = Vector2(130, 18)
 
-[node name="ChunkSlide" type="Node2D"]
+[node name="ChunkSlide" type="Node2D" unique_id=1548028251]
 
-[node name="ConnectTop" type="Marker2D" parent="."]
-position = Vector2(0, 0)
+[node name="ConnectTop" type="Marker2D" parent="." unique_id=1228737398]
 
-[node name="ConnectBottom" type="Marker2D" parent="."]
+[node name="ConnectBottom" type="Marker2D" parent="." unique_id=618251070]
 position = Vector2(0, 320)
 
-[node name="BallSpawn" type="Marker2D" parent="."]
+[node name="BallSpawn" type="Marker2D" parent="." unique_id=1070306947]
 position = Vector2(0, 48)
 
-[node name="WallLeft" type="StaticBody2D" parent="."]
+[node name="WallLeft" type="StaticBody2D" parent="." unique_id=1713486929]
 position = Vector2(-300, 160)
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft" unique_id=1364219272]
 shape = SubResource("Rect_wall_tall")
 
-[node name="WallRight" type="StaticBody2D" parent="."]
+[node name="WallRight" type="StaticBody2D" parent="." unique_id=1949366373]
 position = Vector2(300, 160)
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight" unique_id=1399321734]
 shape = SubResource("Rect_wall_tall")
 
-[node name="NubLeft" type="StaticBody2D" parent="."]
+[node name="NubLeft" type="StaticBody2D" parent="." unique_id=906310064]
 position = Vector2(-120, 130)
 rotation = 0.32
-collision_layer = 1
+scale = Vector2(2.4933918, 1)
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NubLeft"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NubLeft" unique_id=446444365]
 shape = SubResource("Rect_nub")
 
-[node name="NubRight" type="StaticBody2D" parent="."]
+[node name="NubRight" type="StaticBody2D" parent="." unique_id=1535377710]
 position = Vector2(130, 220)
 rotation = -0.32
-collision_layer = 1
+scale = Vector2(3.0874336, 1)
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NubRight"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NubRight" unique_id=1422771834]
 shape = SubResource("Rect_nub")
+
+[node name="Blade" parent="." unique_id=1946521368 instance=ExtResource("1_a76hc")]
+position = Vector2(36, 215)

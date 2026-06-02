@@ -1,0 +1,128 @@
+[gd_scene format=3 uid="uid://c5t6d6ek6nk4s"]
+
+[ext_resource type="Script" path="res://scripts/game_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/chunk_generator.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/vertical_camera.gd" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/ball.tscn" id="4"]
+
+[node name="Main" type="Node2D" unique_id=682681772]
+script = ExtResource("1")
+ball_scene = ExtResource("4")
+
+[node name="World" type="Node2D" parent="." unique_id=731129945]
+process_mode = 1
+
+[node name="ChunkGenerator" type="Node" parent="." unique_id=352910773]
+process_mode = 1
+script = ExtResource("2")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=433664436]
+process_mode = 1
+position = Vector2(320, 200)
+limit_left = -120
+limit_top = -3000
+limit_right = 760
+limit_bottom = 60000
+script = ExtResource("3")
+max_catchup_distance = 360.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=668890414]
+
+[node name="Vignette" type="ColorRect" parent="CanvasLayer" unique_id=961326589]
+modulate = Color(1, 1, 1, 0)
+offset_right = 640.0
+offset_bottom = 720.0
+mouse_filter = 2
+color = Color(0.85, 0.1, 0.15, 1)
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer" unique_id=529054500]
+offset_top = 8.0
+offset_right = 640.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.98, 0.94, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.75)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 26
+text = "PIN DOWN"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="CanvasLayer" unique_id=998900722]
+offset_top = 44.0
+offset_right = 640.0
+offset_bottom = 76.0
+theme_override_colors/font_color = Color(0.88, 0.92, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "[Space] / [LMB] Flippers   [R] Restart   [Esc] Pause"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DepthLabel" type="Label" parent="CanvasLayer" unique_id=1752323151]
+offset_top = 80.0
+offset_right = 640.0
+offset_bottom = 104.0
+theme_override_colors/font_color = Color(0.95, 1, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 14
+text = "DEPTH 0%   RUN 1   DEATHS 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DepthBarBg" type="ColorRect" parent="CanvasLayer" unique_id=156870877]
+offset_left = 220.0
+offset_top = 106.0
+offset_right = 420.0
+offset_bottom = 114.0
+color = Color(0.15, 0.17, 0.25, 0.85)
+
+[node name="DepthBarFill" type="ColorRect" parent="CanvasLayer" unique_id=1971604497]
+offset_left = 220.0
+offset_top = 106.0
+offset_right = 220.0
+offset_bottom = 114.0
+color = Color(0.95, 0.78, 0.25, 0.95)
+
+[node name="CenterMessage" type="Label" parent="CanvasLayer" unique_id=1074646232]
+offset_top = 280.0
+offset_right = 640.0
+offset_bottom = 440.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 38
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="PauseLabel" type="Label" parent="CanvasLayer" unique_id=2067827642]
+process_mode = 3
+offset_top = 320.0
+offset_right = 640.0
+offset_bottom = 400.0
+theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 42
+text = "— PAUSED —"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SfxFlip" type="AudioStreamPlayer" parent="." unique_id=46073479]
+
+[node name="SfxHit" type="AudioStreamPlayer" parent="." unique_id=1307688506]
+
+[node name="SfxDeath" type="AudioStreamPlayer" parent="." unique_id=467271527]
+
+[node name="SfxWin" type="AudioStreamPlayer" parent="." unique_id=1820523458]
+
+[node name="SfxHazard" type="AudioStreamPlayer" parent="." unique_id=2092414100]
+
+[node name="SfxRicochet" type="AudioStreamPlayer" parent="." unique_id=446692862]

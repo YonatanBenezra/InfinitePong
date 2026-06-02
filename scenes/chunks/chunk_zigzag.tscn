@@ -1,61 +1,101 @@
 [gd_scene format=3 uid="uid://cchunk0g0g"]
 
+[ext_resource type="Script" uid="uid://dnkf2ssju406c" path="res://scripts/hazards/moving_hazard.gd" id="1_8t02h"]
+[ext_resource type="PackedScene" uid="uid://bladespin001" path="res://scenes/hazards/blade.tscn" id="2_4i7vi"]
+[ext_resource type="PackedScene" uid="uid://cflipstd01" path="res://scenes/flippers/flipper_standard.tscn" id="3_4i7vi"]
+
 [sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
 size = Vector2(80, 480)
 
 [sub_resource type="RectangleShape2D" id="Rect_shelf"]
 size = Vector2(240, 18)
 
-[node name="ChunkZigzag" type="Node2D"]
+[node name="ChunkZigzag" type="Node2D" unique_id=80611845]
 
-[node name="ConnectTop" type="Marker2D" parent="."]
-position = Vector2(0, 0)
+[node name="ConnectTop" type="Marker2D" parent="." unique_id=66997935]
 
-[node name="ConnectBottom" type="Marker2D" parent="."]
+[node name="ConnectBottom" type="Marker2D" parent="." unique_id=1387705433]
 position = Vector2(0, 480)
 
-[node name="BallSpawn" type="Marker2D" parent="."]
+[node name="BallSpawn" type="Marker2D" parent="." unique_id=738769412]
 position = Vector2(0, 48)
 
-[node name="WallLeft" type="StaticBody2D" parent="."]
+[node name="WallLeft" type="StaticBody2D" parent="." unique_id=211009198]
 position = Vector2(-300, 240)
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft" unique_id=569472908]
 shape = SubResource("Rect_wall_tall")
 
-[node name="WallRight" type="StaticBody2D" parent="."]
+[node name="WallRight" type="StaticBody2D" parent="." unique_id=1874961764]
 position = Vector2(300, 240)
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight" unique_id=392188252]
 shape = SubResource("Rect_wall_tall")
 
-[node name="ShelfA" type="StaticBody2D" parent="."]
+[node name="ShelfA" type="StaticBody2D" parent="." unique_id=1616116629]
 position = Vector2(-120, 130)
 rotation = 0.18
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ShelfA"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShelfA" unique_id=1786721539]
+position = Vector2(-23.612251, 4.296707)
 shape = SubResource("Rect_shelf")
 
-[node name="ShelfB" type="StaticBody2D" parent="."]
+[node name="ShelfB" type="StaticBody2D" parent="." unique_id=1282150082]
 position = Vector2(120, 260)
 rotation = -0.18
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ShelfB"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShelfB" unique_id=392700145]
+position = Vector2(23.612251, 4.296753)
 shape = SubResource("Rect_shelf")
 
-[node name="ShelfC" type="StaticBody2D" parent="."]
+[node name="ShelfC" type="StaticBody2D" parent="." unique_id=873796159]
 position = Vector2(-120, 380)
 rotation = 0.18
-collision_layer = 1
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ShelfC"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShelfC" unique_id=395745781]
+position = Vector2(-23.612251, 4.2966614)
 shape = SubResource("Rect_shelf")
+
+[node name="Mover" type="Node2D" parent="." unique_id=140121370]
+position = Vector2(0, 340)
+script = ExtResource("1_8t02h")
+axis = Vector2(0, 1)
+range_px = 150.0
+speed = 180.0
+delay_seconds = 0.55
+
+[node name="Blade" parent="Mover" unique_id=975033179 instance=ExtResource("2_4i7vi")]
+position = Vector2(0, 36.902008)
+
+[node name="Blade2" parent="Mover" unique_id=1279506549 instance=ExtResource("2_4i7vi")]
+position = Vector2(0, -43.097992)
+
+[node name="Blade3" parent="Mover" unique_id=247504572 instance=ExtResource("2_4i7vi")]
+position = Vector2(0, -123.09799)
+
+[node name="FlipperStandard" parent="." unique_id=78610940 instance=ExtResource("3_4i7vi")]
+position = Vector2(-74, 139)
+scale = Vector2(0.5, 0.5)
+rest_angle_deg = 0.0
+active_angle_deg = -30.0
+
+[node name="FlipperStandard2" parent="." unique_id=112050381 instance=ExtResource("3_4i7vi")]
+position = Vector2(-74, 391)
+scale = Vector2(0.5, 0.5)
+rest_angle_deg = 0.0
+active_angle_deg = -30.0
+
+[node name="FlipMountRight2" type="Node2D" parent="." unique_id=1054593069]
+position = Vector2(74.5, 269.5)
+rotation = -3.1415923
+scale = Vector2(0.5, 0.5)
+
+[node name="FlipperStandard" parent="FlipMountRight2" unique_id=548429728 instance=ExtResource("3_4i7vi")]
+rest_angle_deg = 0.0
+active_angle_deg = -30.0
+mirror = true
