@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3 uid="uid://cstaticbmp1"]
+
+[ext_resource type="Script" path="res://scripts/bumpers/static_bumper.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://c4416jq7r1y5c" path="res://assets/sprite_05.png" id="2"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bumper"]
+friction = 0.35
+bounce = 0.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bumper"]
+radius = 17.0
+
+[node name="StaticBumper" type="RigidBody2D"]
+collision_layer = 1
+collision_mask = 2
+gravity_scale = 0.0
+physics_material_override = SubResource("PhysicsMaterial_bumper")
+freeze = true
+contact_monitor = true
+max_contacts_reported = 4
+script = ExtResource("1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_bumper")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture_filter = 0
+texture = ExtResource("2")

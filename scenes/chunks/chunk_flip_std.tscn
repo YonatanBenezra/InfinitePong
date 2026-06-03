@@ -9,9 +9,6 @@ size = Vector2(80, 460)
 [sub_resource type="RectangleShape2D" id="Rect_ledge_side"]
 size = Vector2(120, 22)
 
-[sub_resource type="RectangleShape2D" id="Rect_diamond"]
-size = Vector2(60, 60)
-
 [node name="ChunkFlipStd" type="Node2D" unique_id=822542823]
 
 [node name="ConnectTop" type="Marker2D" parent="." unique_id=735941018]
@@ -89,31 +86,9 @@ collision_mask = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LedgeRight2" unique_id=162321468]
 shape = SubResource("Rect_ledge_side")
 
-[node name="CenterBumper" type="StaticBody2D" parent="." unique_id=866009932]
+[node name="BumperSlotCenter" type="Marker2D" parent="." unique_id=866009932]
 position = Vector2(0, 240)
-rotation = 0.785398
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CenterBumper" unique_id=1624147285]
-shape = SubResource("Rect_diamond")
-
-[node name="CenterBumper2" type="StaticBody2D" parent="." unique_id=2026151104]
-position = Vector2(86.99997, 293.99997)
-rotation = 0.785398
-scale = Vector2(0.5, 0.5)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CenterBumper2" unique_id=1151004791]
-shape = SubResource("Rect_diamond")
-
-[node name="CenterBumper3" type="StaticBody2D" parent="." unique_id=1384468426]
-position = Vector2(-102, 303)
-rotation = 0.785398
-scale = Vector2(0.5, 0.5)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CenterBumper3" unique_id=63208115]
-shape = SubResource("Rect_diamond")
+scale = Vector2(1.75, 1.75)
 
 [node name="FlipMountLeft2" type="Node2D" parent="." unique_id=1959435839]
 position = Vector2(-138, 431)

@@ -7,9 +7,6 @@
 [sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
 size = Vector2(80, 440)
 
-[sub_resource type="RectangleShape2D" id="Rect_diamond"]
-size = Vector2(48, 48)
-
 [node name="ChunkFlipInverted" type="Node2D" unique_id=574070011]
 
 [node name="ConnectTop" type="Marker2D" parent="." unique_id=444725167]
@@ -33,46 +30,6 @@ collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight" unique_id=1909946152]
 shape = SubResource("Rect_wall_tall")
-
-[node name="BumperLeft" type="StaticBody2D" parent="." unique_id=1560835632]
-position = Vector2(-247, 101)
-rotation = 0.785398
-scale = Vector2(3, 3)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperLeft" unique_id=1862266729]
-position = Vector2(-3.0641327, 3.064125)
-shape = SubResource("Rect_diamond")
-
-[node name="BumperRight" type="StaticBody2D" parent="." unique_id=137520054]
-position = Vector2(248.00006, 101)
-rotation = 0.785398
-scale = Vector2(3, 3)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperRight" unique_id=664849799]
-position = Vector2(3.0641327, -3.0641327)
-shape = SubResource("Rect_diamond")
-
-[node name="BumperLeft2" type="StaticBody2D" parent="." unique_id=589037900]
-position = Vector2(-247, 330)
-rotation = 0.785398
-scale = Vector2(3, 3)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperLeft2" unique_id=1084349944]
-position = Vector2(-3.0641327, 3.064125)
-shape = SubResource("Rect_diamond")
-
-[node name="BumperRight2" type="StaticBody2D" parent="." unique_id=852528566]
-position = Vector2(248.00006, 330)
-rotation = 0.785398
-scale = Vector2(3, 3)
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperRight2" unique_id=1385917716]
-position = Vector2(3.0641327, -3.0641327)
-shape = SubResource("Rect_diamond")
 
 [node name="InvertedGate" parent="." unique_id=1439785129 instance=ExtResource("1")]
 position = Vector2(21, 223)

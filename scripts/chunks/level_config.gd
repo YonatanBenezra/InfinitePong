@@ -32,6 +32,11 @@ class_name LevelConfig
 ## to change this; raising it makes generation more pedantic, not harder.
 @export_range(8, 256, 1) var max_pick_attempts_per_slot: int = 48
 
+@export_group("Bumpers")
+## Static bumpers spawned per level at `BumperSlot` markers (see chunk scenes).
+@export_range(0, 6, 1) var min_bumpers_per_run: int = 2
+@export_range(0, 6, 1) var max_bumpers_per_run: int = 3
+
 @export_group("Chunk pool")
 ## The pool of chunks the generator may pick from for the middle of every
 ## level. Drag chunk_def_*.tres resources here to enable them, remove an

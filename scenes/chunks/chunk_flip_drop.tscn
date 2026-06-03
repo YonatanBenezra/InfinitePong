@@ -9,9 +9,6 @@ size = Vector2(80, 420)
 [sub_resource type="RectangleShape2D" id="Rect_diag"]
 size = Vector2(120, 16)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_06ogi"]
-size = Vector2(70, 70)
-
 [node name="ChunkFlipDrop" type="Node2D" unique_id=1383980593]
 
 [node name="ConnectTop" type="Marker2D" parent="." unique_id=513364800]
@@ -100,14 +97,9 @@ position = Vector2(202, 337)
 scale = Vector2(0.45, 1)
 active_offset = Vector2(0, -110)
 
-[node name="BumperTop" type="StaticBody2D" parent="." unique_id=1795443350]
-position = Vector2(-260, 50)
-rotation = 0.785398
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperTop" unique_id=60471274]
-position = Vector2(240.41632, -127.279175)
-shape = SubResource("RectangleShape2D_06ogi")
+[node name="BumperSlotCenter" type="Marker2D" parent="." unique_id=1795443350]
+position = Vector2(0, 72)
+scale = Vector2(2, 2)
 
 [node name="SpikeL1" parent="." unique_id=1377557930 instance=ExtResource("2_jxat1")]
 position = Vector2(-238, 393)

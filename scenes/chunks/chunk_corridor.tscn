@@ -7,9 +7,6 @@
 [sub_resource type="RectangleShape2D" id="Rect_outer_wall"]
 size = Vector2(48, 560)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_cywn3"]
-size = Vector2(70, 70)
-
 [sub_resource type="RectangleShape2D" id="Rect_inner_wall"]
 size = Vector2(40, 320)
 
@@ -31,21 +28,9 @@ collision_mask = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="OuterWallLeft" unique_id=179872010]
 shape = SubResource("Rect_outer_wall")
 
-[node name="BumperTop" type="StaticBody2D" parent="." unique_id=1714466379]
-position = Vector2(-260, 50)
-rotation = 0.785398
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperTop" unique_id=1725097943]
-shape = SubResource("RectangleShape2D_cywn3")
-
-[node name="BumperTop2" type="StaticBody2D" parent="." unique_id=963973851]
-position = Vector2(260, 49.999973)
-rotation = 0.785398
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperTop2" unique_id=322243825]
-shape = SubResource("RectangleShape2D_cywn3")
+[node name="BumperSlotCenter" type="Marker2D" parent="." unique_id=1714466379]
+position = Vector2(0, 72)
+scale = Vector2(2, 2)
 
 [node name="OuterWallRight" type="StaticBody2D" parent="." unique_id=558792004]
 position = Vector2(284, 280)

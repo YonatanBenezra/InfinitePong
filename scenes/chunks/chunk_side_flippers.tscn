@@ -6,9 +6,6 @@
 [sub_resource type="RectangleShape2D" id="Rect_wall"]
 size = Vector2(80, 460)
 
-[sub_resource type="RectangleShape2D" id="Rect_diamond"]
-size = Vector2(80, 80)
-
 [sub_resource type="RectangleShape2D" id="Rect_top_shelf"]
 size = Vector2(150, 18)
 
@@ -55,14 +52,9 @@ collision_mask = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TopShelfR"]
 shape = SubResource("Rect_top_shelf")
 
-[node name="CenterBumper" type="StaticBody2D" parent="."]
+[node name="BumperSlotCenter" type="Marker2D" parent="."]
 position = Vector2(0, 230)
-rotation = 0.785398
-collision_layer = 1
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CenterBumper"]
-shape = SubResource("Rect_diamond")
+scale = Vector2(2.35, 2.35)
 
 [node name="Spike1" parent="." instance=ExtResource("2")]
 position = Vector2(-100, 320)

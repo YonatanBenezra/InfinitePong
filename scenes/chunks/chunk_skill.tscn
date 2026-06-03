@@ -9,9 +9,6 @@ size = Vector2(80, 500)
 [sub_resource type="RectangleShape2D" id="Rect_diag"]
 size = Vector2(120, 16)
 
-[sub_resource type="RectangleShape2D" id="Rect_diamond"]
-size = Vector2(60, 60)
-
 [node name="ChunkSkill" type="Node2D" unique_id=918348846]
 
 [node name="ConnectTop" type="Marker2D" parent="." unique_id=168336974]
@@ -74,13 +71,9 @@ position = Vector2(-130, 230)
 [node name="Spike2" parent="." unique_id=959249832 instance=ExtResource("1")]
 position = Vector2(130, 230)
 
-[node name="CenterBumper" type="StaticBody2D" parent="." unique_id=968305234]
+[node name="BumperSlotCenter" type="Marker2D" parent="." unique_id=968305234]
 position = Vector2(0, 290)
-rotation = 0.785398
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CenterBumper" unique_id=1270516826]
-shape = SubResource("Rect_diamond")
+scale = Vector2(1.75, 1.75)
 
 [node name="Spike3" parent="." unique_id=888508417 instance=ExtResource("1")]
 position = Vector2(-100, 380)

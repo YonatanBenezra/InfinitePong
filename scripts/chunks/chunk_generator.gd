@@ -53,6 +53,7 @@ const _DEFAULT_START_PATH := "res://resources/chunks/chunk_def_start.tres"
 const _DEFAULT_FINALE_PATH := "res://resources/chunks/chunk_def_finale.tres"
 
 const _MOVING_HAZARD_SCRIPT := "res://scripts/hazards/moving_hazard.gd"
+const _BUMPER_SCENE_PATH := "res://scenes/bumpers/static_bumper.tscn"
 
 ## Canonical screen-edge wall geometry lives on `Arena` so chunks, the
 ## generator, the camera, and the docs all share one source of truth.
@@ -281,6 +282,8 @@ func build_level(world: Node2D, rng: RandomNumberGenerator, level_index: int = 1
 	if hazard_speed_mult > 1.001:
 		_scale_moving_hazards(world, hazard_speed_mult)
 
+	_place_run_bumpers(world, rng)
+
 	var first: Node2D = world.get_child(0) as Node2D
 	if first.has_node("BallSpawn"):
 		spawn_global = (first.get_node("BallSpawn") as Node2D).global_position
@@ -347,3 +350,65 @@ func _scale_moving_hazards(node: Node, mult: float) -> void:
 		node.set("speed", current * mult)
 	for child in node.get_children():
 		_scale_moving_hazards(child, mult)
+
+
+## Spawns 2–3 bumpers per run at centered `BumperSlot` markers.
+func _place_run_bumpers(world: Node2D, rng: RandomNumberGenerator) -> void:
+	if config == null:
+		return
+	var min_n: int = maxi(config.min_bumpers_per_run, 0)
+	var max_n: int = maxi(config.max_bumpers_per_run, min_n)
+	if max_n <= 0:
+		return
+	_strip_legacy_bumpers(world)
+	var slots: Array[Marker2D] = []
+	_collect_bumper_slots(world, slots)
+	if slots.is_empty():
+		return
+	_shuffle_with_rng(slots, rng)
+	var want: int = rng.randi_range(min_n, max_n)
+	var count: int = mini(want, slots.size())
+	var bumper_scene: PackedScene = load(_BUMPER_SCENE_PATH) as PackedScene
+	if bumper_scene == null:
+		push_error("ChunkGenerator: missing static bumper scene")
+		return
+	for i in count:
+		var slot: Marker2D = slots[i]
+		var host: Node = slot.get_parent()
+		if host == null:
+			continue
+		var bumper: Node2D = bumper_scene.instantiate() as Node2D
+		if bumper == null:
+			continue
+		host.add_child(bumper)
+		bumper.position = slot.position
+		bumper.rotation = slot.rotation
+		bumper.scale = slot.scale
+		slot.queue_free()
+
+
+func _collect_bumper_slots(node: Node, out: Array[Marker2D]) -> void:
+	for child in node.get_children():
+		if child is Marker2D and child.name.begins_with("BumperSlot"):
+			out.append(child as Marker2D)
+		_collect_bumper_slots(child, out)
+
+
+func _strip_legacy_bumpers(node: Node) -> void:
+	var remove: Array[Node] = []
+	for child in node.get_children():
+		if child.name == "StaticBumper" or (
+				child is StaticBody2D and "Bumper" in child.name):
+			remove.append(child)
+		else:
+			_strip_legacy_bumpers(child)
+	for n in remove:
+		n.queue_free()
+
+
+func _shuffle_with_rng(arr: Array, rng: RandomNumberGenerator) -> void:
+	for i in range(arr.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, i)
+		var tmp: Variant = arr[i]
+		arr[i] = arr[j]
+		arr[j] = tmp

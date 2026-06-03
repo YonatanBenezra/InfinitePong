@@ -1,12 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://cchunkbmp1"]
+[gd_scene load_steps=3 format=3 uid="uid://cchunkbmp1"]
 
 [ext_resource type="PackedScene" uid="uid://bladespin001" path="res://scenes/hazards/blade.tscn" id="2"]
 
 [sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
 size = Vector2(80, 500)
-
-[sub_resource type="RectangleShape2D" id="Rect_diamond"]
-size = Vector2(70, 70)
 
 [node name="ChunkBumperPit" type="Node2D" unique_id=2123855278]
 
@@ -33,29 +30,17 @@ collision_mask = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight" unique_id=1867372876]
 shape = SubResource("Rect_wall_tall")
 
-[node name="BumperTop" type="StaticBody2D" parent="." unique_id=226427996]
+[node name="BumperSlotHigh" type="Marker2D" parent="." unique_id=226427996]
 position = Vector2(0, 160)
-rotation = 0.785398
-collision_mask = 0
+scale = Vector2(2, 2)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperTop" unique_id=473004584]
-shape = SubResource("Rect_diamond")
+[node name="BumperSlotMid" type="Marker2D" parent="." unique_id=1754290016]
+position = Vector2(0, 260)
+scale = Vector2(2, 2)
 
-[node name="BumperLeft" type="StaticBody2D" parent="." unique_id=1754290016]
-position = Vector2(-130, 300)
-rotation = 0.785398
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperLeft" unique_id=1868393679]
-shape = SubResource("Rect_diamond")
-
-[node name="BumperRight" type="StaticBody2D" parent="." unique_id=1775310783]
-position = Vector2(130, 300)
-rotation = 0.785398
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BumperRight" unique_id=958693069]
-shape = SubResource("Rect_diamond")
+[node name="BumperSlotLow" type="Marker2D" parent="." unique_id=1775310783]
+position = Vector2(0, 340)
+scale = Vector2(2, 2)
 
 [node name="BladeBottom" parent="." instance=ExtResource("2")]
 position = Vector2(0, 430)
