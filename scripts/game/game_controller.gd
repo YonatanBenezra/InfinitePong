@@ -21,18 +21,19 @@ const STARTING_LIVES := 5
 @export var flipper_sfx_cooldown: float = 0.09
 
 @export_group("Shooting")
-## Max ammo. Bullets cost 1 each; the magazine refills `reload_amount`
-## per qualifying contact, gated by `reload_cooldown`.
+## Max ammo. Bullets cost 1 each; the magazine refills `reload_amount` on
+## each qualifying ball collision, gated by `reload_cooldown`.
 @export_range(1, 30, 1) var max_ammo: int = 5
-## Bullets restored per contact tick. Stays at 1 by default so reloading
-## feels deliberate; raise for designers who want a faster recharge curve.
+## Bullets restored per qualifying collision. Stays at 1 by default so the
+## player reloads one shot per bounce.
 @export_range(1, 10, 1) var reload_amount: int = 1
-## Seconds between collision-driven reload ticks. Stops one long bounce
-## off a wall from refilling the whole magazine in a single frame.
+## Minimum seconds between collision-driven reload ticks. Stops one long
+## bounce (or a rapid flurry of contacts) from refilling the whole magazine
+## at once, and drives the on-screen reload-readiness bar.
 @export_range(0.05, 5.0, 0.05) var reload_cooldown: float = 0.45
 ## Velocity (px/s) applied to the ball in the OPPOSITE direction of each
 ## shot. Raise for a stronger movement boost; lower for a gentler kick.
-@export_range(0.0, 1200.0, 10.0) var recoil_strength: float = 320.0
+@export_range(0.0, 1200.0, 10.0) var recoil_strength: float = 150.0
 ## Bullet scene spawned per shot. Defaults to res://scenes/projectiles/bullet.tscn.
 @export var bullet_scene: PackedScene = preload("res://scenes/projectiles/bullet.tscn")
 
@@ -60,6 +61,9 @@ var _level_index: int = 1
 var _level_seed: int = 0
 var _lives: int = STARTING_LIVES
 var _ammo: int = 5
+## Seconds left on the reload gate. A qualifying ball collision refills one
+## ammo and re-arms this to `reload_cooldown`; it counts back down to 0,
+## during which further collisions don't reload. Also drives the HUD bar.
 var _reload_cooldown_left: float = 0.0
 var _sfx_shoot: AudioStreamPlayer
 var _sfx_empty: AudioStreamPlayer
@@ -71,7 +75,6 @@ var _pause_menu: Control
 var _results_primary: Callable
 
 # HUD nodes (built procedurally).
-var _hud_world: Label
 var _hud_level: Label
 var _hud_track: Panel
 var _hud_depth_fill: ColorRect
@@ -80,8 +83,9 @@ var _hud_time: Label
 var _hud_lives: HBoxContainer
 var _hud_hearts: Array[Label] = []
 var _hud_ammo: Label
+var _hud_reload_track: Panel
+var _hud_reload_fill: ColorRect
 var _fps_label: Label
-var _hud_world_name: Label
 var _hint: Label
 
 # --- Per-run metrics ---
@@ -184,20 +188,32 @@ func _setup_hud() -> void:
 	row.add_theme_constant_override("separation", 14)
 	bar.add_child(row)
 
-	# Left: world + level.
+	# Left: level + ammo.
 	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 0)
+	left.add_theme_constant_override("separation", 2)
 	left.custom_minimum_size = Vector2(120, 0)
 	row.add_child(left)
-	_hud_world = _hud_label("", 11, UITheme.TEXT_FAINT, HORIZONTAL_ALIGNMENT_LEFT)
-	_hud_world_name = _hud_label("", 14, UITheme.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
 	_hud_level = _hud_label("", 20, UITheme.TEXT, HORIZONTAL_ALIGNMENT_LEFT)
 	_hud_ammo = _hud_label("AMMO %d / %d" % [_ammo, max_ammo], 11,
 		UITheme.TEXT_FAINT, HORIZONTAL_ALIGNMENT_LEFT)
-	left.add_child(_hud_world)
-	left.add_child(_hud_world_name)
 	left.add_child(_hud_level)
 	left.add_child(_hud_ammo)
+	# Reload progress bar — a thin track beneath the ammo readout that fills
+	# while the magazine recharges, then hides once it is full.
+	_hud_reload_track = Panel.new()
+	_hud_reload_track.custom_minimum_size = Vector2(110, 6)
+	var reload_track_style := StyleBoxFlat.new()
+	reload_track_style.bg_color = Color(0, 0, 0, 0.5)
+	reload_track_style.set_corner_radius_all(3)
+	_hud_reload_track.add_theme_stylebox_override("panel", reload_track_style)
+	left.add_child(_hud_reload_track)
+	_hud_reload_fill = ColorRect.new()
+	_hud_reload_fill.anchor_bottom = 1.0
+	_hud_reload_fill.offset_left = 1.0
+	_hud_reload_fill.offset_top = 1.0
+	_hud_reload_fill.offset_bottom = -1.0
+	_hud_reload_fill.color = Color(1.0, 0.82, 0.4)
+	_hud_reload_track.add_child(_hud_reload_fill)
 
 	# Centre: depth bar.
 	var center := VBoxContainer.new()
@@ -316,6 +332,16 @@ func _update_hud() -> void:
 		_hud_ammo.text = "AMMO %d / %d" % [_ammo, max_ammo]
 		_hud_ammo.add_theme_color_override("font_color",
 			UITheme.DANGER if _ammo == 0 else UITheme.TEXT_FAINT)
+	if _hud_reload_track != null:
+		# Shown only while the magazine isn't full. The fill is the reload
+		# cooldown recovering: it empties when a bounce refills a shot, then
+		# fills back to full = "ready to reload on the next bounce".
+		var reloading := _ammo < max_ammo
+		_hud_reload_track.visible = reloading
+		if reloading and _hud_reload_fill != null:
+			var ready := 1.0 - _reload_cooldown_left / maxf(reload_cooldown, 0.01)
+			var reload_w: float = _hud_reload_track.size.x - 2.0
+			_hud_reload_fill.size.x = maxf(reload_w * clampf(ready, 0.0, 1.0), 0.0)
 
 
 func _format_time(t: float) -> String:
@@ -448,8 +474,6 @@ func _regenerate_level(advance: bool) -> void:
 		_camera.call("set_target", _ball)
 	_invuln_until = Time.get_ticks_msec() / 1000.0 + spawn_invuln_seconds
 
-	_hud_world.text = "WORLD %d" % Worlds.world_index_for_level(_level_index)
-	_hud_world_name.text = String(_world_def.get("name", ""))
 	_hud_level.text = "LEVEL %d" % _level_index
 	_show_controls_hint()
 
@@ -457,8 +481,13 @@ func _regenerate_level(advance: bool) -> void:
 	MusicManager.set_level(_level_index)
 
 
-## Restarts the current level (Retry button / R key / pause-restart).
+## Restarts the run from the BEGINNING (Retry button / R key / pause-restart).
+## Dying or restarting wipes level progression — the player always returns to
+## level 1 rather than retrying the level they were on, with a fresh layout.
 func _restart_level() -> void:
+	_level_index = 1
+	_level_seed = randi()
+	_deaths_this_level = 0
 	_regenerate_level(false)
 
 
@@ -582,10 +611,7 @@ func _show_results(result: Dictionary) -> void:
 # --- Feedback ------------------------------------------------------------
 
 func _on_ball_hit(speed: float) -> void:
-	# Wall / floor contacts also drip-feed the ammo magazine back up. A
-	# cooldown stops one long-running contact from refilling in a single
-	# burst. Reload doesn't require a "real" bounce — even a quiet contact
-	# counts — so the gate below applies only to the FX, not the reload.
+	# Any ball contact drip-feeds the magazine back up (1 per reload_cooldown).
 	_try_reload_from_contact()
 	if speed < 220.0:
 		return
@@ -598,6 +624,10 @@ func _on_ball_hit(speed: float) -> void:
 			_world_def.get("wall_trim", Color(1, 1, 1)), 6, 130.0, 0.35)
 
 
+## Refills one reload tick per qualifying ball collision. Called from BOTH
+## the normal-hit and ricochet paths so any bounce reloads — the old version
+## only listened to the normal-hit event, so a fast ricochet (the most common
+## contact while moving at speed) never reloaded and the gun felt broken.
 func _try_reload_from_contact() -> void:
 	if _ammo >= max_ammo:
 		return
@@ -655,9 +685,13 @@ func _on_bullet_hit_hazard(pos: Vector2) -> void:
 
 
 func _on_ball_ricochet(speed: float) -> void:
+	# A ricochet is just a fast bounce, so it reloads exactly like a normal
+	# hit. This is the path that was missing before, which is why reloading
+	# "didn't work all the time" once the ball was moving fast.
+	_try_reload_from_contact()
 	_play_sfx(_sfx_ricochet)
-	# A ricochet is just a fast bounce — still a small shake, slightly
-	# stronger than a regular hit to match the audio cue.
+	# Still a small shake, slightly stronger than a regular hit to match the
+	# audio cue.
 	_shake(5.0)
 	if is_instance_valid(_ball):
 		VFX.burst(self, _ball.global_position,

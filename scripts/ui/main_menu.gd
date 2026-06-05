@@ -45,15 +45,6 @@ func _add_title() -> void:
 	rule.offset_bottom = 165
 	add_child(rule)
 
-	var world := Worlds.world(Profile.highest_world_unlocked)
-	var sub := UITheme.make_label(
-		"WORLD %d   ·   %s" % [world["id"], String(world["name"]).to_upper()],
-		15, UITheme.TEXT_DIM)
-	sub.anchor_right = 1.0
-	sub.offset_top = 176
-	sub.offset_bottom = 198
-	add_child(sub)
-
 
 func _add_buttons() -> void:
 	var vb := VBoxContainer.new()
@@ -80,17 +71,12 @@ func _add_buttons() -> void:
 	cont.pressed.connect(_on_continue)
 	vb.add_child(cont)
 
-	for entry in [
-		["SETTINGS", SceneRouter.SETTINGS, "settings"],
-		["BALL SKINS", SceneRouter.BALL_SKINS, "skins"],
-		["LEVELS", SceneRouter.LEVEL_SELECT, "levels"],
-		["ACHIEVEMENTS", SceneRouter.ACHIEVEMENTS, "trophy"],
-	]:
-		var b := UITheme.make_ghost_button(entry[0], entry[2])
-		b.custom_minimum_size = Vector2(312, 0)
-		var dest: String = entry[1]
-		b.pressed.connect(func(): SceneRouter.goto(dest))
-		vb.add_child(b)
+	# Only the core loop is reachable from the menu: Play / Continue / Settings.
+	# (Ball Skins, Levels and Achievements were intentionally removed.)
+	var settings := UITheme.make_ghost_button("SETTINGS", "settings")
+	settings.custom_minimum_size = Vector2(312, 0)
+	settings.pressed.connect(func(): SceneRouter.goto(SceneRouter.SETTINGS))
+	vb.add_child(settings)
 
 
 func _add_corner_icons() -> void:
