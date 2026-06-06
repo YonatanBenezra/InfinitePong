@@ -55,21 +55,22 @@ func _add_buttons() -> void:
 	vb.add_theme_constant_override("separation", 10)
 	add_child(vb)
 
-	var has_progress := Profile.highest_level_reached > 1
-
 	var play := UITheme.make_button("PLAY", Color(0, 0, 0, 0), "play")
 	play.custom_minimum_size = Vector2(312, 0)
 	play.pressed.connect(_on_play)
 	vb.add_child(play)
 	play.grab_focus()
 
-	var cont := UITheme.make_button(
-		"CONTINUE  ·  LV %d" % Profile.highest_unlocked_level(),
-		Color(0, 0, 0, 0), "continue")
-	cont.custom_minimum_size = Vector2(312, 0)
-	cont.disabled = not has_progress
-	cont.pressed.connect(_on_continue)
-	vb.add_child(cont)
+	# Continue is shown ONLY while a run is genuinely in progress (a saved run
+	# snapshot exists). After a death — which clears the saved run — it's gone,
+	# so the menu never offers to resume a level the player no longer holds.
+	if Profile.has_active_run():
+		var cont := UITheme.make_button(
+			"CONTINUE  ·  LV %d" % Profile.active_run_level(),
+			Color(0, 0, 0, 0), "continue")
+		cont.custom_minimum_size = Vector2(312, 0)
+		cont.pressed.connect(_on_continue)
+		vb.add_child(cont)
 
 	# Only the core loop is reachable from the menu: Play / Continue / Settings.
 	# (Ball Skins, Levels and Achievements were intentionally removed.)
@@ -96,9 +97,10 @@ func _place_corner_icon(btn: Button, left: float, right: float) -> void:
 
 
 func _on_play() -> void:
+	# A new game abandons any in-progress run and starts fresh from level 1.
+	Profile.clear_active_run()
 	SceneRouter.goto(SceneRouter.GAME, {"start_level": 1, "mode": "play"})
 
 
 func _on_continue() -> void:
-	SceneRouter.goto(SceneRouter.GAME,
-		{"start_level": Profile.highest_unlocked_level(), "mode": "continue"})
+	SceneRouter.goto(SceneRouter.GAME, {"mode": "continue"})

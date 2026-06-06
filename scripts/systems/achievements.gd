@@ -81,7 +81,14 @@ func unlocked_count() -> int:
 	return _unlocked.size()
 
 
-## Re-checks every achievement and fires a signal for each new unlock.
+## Re-checks every achievement and records new unlocks.
+##
+## Notifications are intentionally suppressed: the achievements screen has
+## been removed, so unlocks are tracked/persisted silently and never fire
+## GameEvents.achievement_unlocked. This is the single backend trigger for
+## the unlock toasts — gating it here keeps the Notifier UI untouched while
+## guaranteeing no achievement popups appear during play or after a level.
+## To re-enable, restore the emit below.
 func _evaluate() -> void:
 	var changed := false
 	for def in definitions:
@@ -90,6 +97,6 @@ func _evaluate() -> void:
 		if _metric(def["metric"]) >= float(def["goal"]):
 			_unlocked[def["id"]] = true
 			changed = true
-			GameEvents.achievement_unlocked.emit(def)
+			# GameEvents.achievement_unlocked.emit(def)  # notifications disabled
 	if changed:
 		_save()

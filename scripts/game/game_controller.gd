@@ -8,9 +8,11 @@ extends Node2D
 
 enum State { PLAYING, RESULTS, PAUSED }
 
-## Lives the player starts the session with. A death decrements; running out
-## ends the run and sends the player back to the menu.
-const STARTING_LIVES := 5
+## Health the player starts a run with. Each lethal hit costs 1; while any
+## remains the ball respawns at the top of the current level and the run
+## continues. At 0 the player dies: the run ends, run progress is wiped and
+## the player is sent back to the menu. The "Heal +2" upgrade tops it back up.
+const STARTING_HEALTH := 5
 
 @export var ball_scene: PackedScene
 @export var chunk_generator_path: NodePath = NodePath("ChunkGenerator")
@@ -59,8 +61,29 @@ var _best_depth_pct: float = 0.0
 var _last_flip_sfx: float = -1.0
 var _level_index: int = 1
 var _level_seed: int = 0
-var _lives: int = STARTING_LIVES
+var _lives: int = STARTING_HEALTH
 var _ammo: int = 5
+## Global spawn point of the current level, kept so a non-lethal hit can
+## respawn the ball at the top without rebuilding the level.
+var _spawn_global: Vector2 = Vector2(0, 80)
+
+# --- Run upgrades -----------------------------------------------------------
+# Modifiers chosen from the post-level upgrade draft. They accumulate across
+# levels for the whole run and reset on death (a death returns to the menu,
+# which reloads this scene fresh, so defaults are restored automatically;
+# _reset_run_progress() also restores them for the in-scene Retry path).
+var _shot_size_mult: float = 1.0
+var _shot_damage: int = 1
+var _speed_mult: float = 1.0
+## Score accumulated across every level cleared this run. Shown as the run's
+## "current score" on the game-over card and compared against the high score.
+var _run_score: int = 0
+# Base values captured at _ready so _reset_run_progress() can restore the
+# tunables that upgrades mutate in place.
+var _base_max_ammo: int = 5
+var _base_reload_cooldown: float = 0.45
+var _base_recoil_strength: float = 150.0
+var _base_ball_speed: float = 750.0
 ## Seconds left on the reload gate. A qualifying ball collision refills one
 ## ammo and re-arms this to `reload_cooldown`; it counts back down to 0,
 ## during which further collisions don't reload. Also drives the HUD bar.
@@ -80,8 +103,7 @@ var _hud_track: Panel
 var _hud_depth_fill: ColorRect
 var _hud_depth_label: Label
 var _hud_time: Label
-var _hud_lives: HBoxContainer
-var _hud_hearts: Array[Label] = []
+var _hud_health: Label
 var _hud_ammo: Label
 var _hud_reload_track: Panel
 var _hud_reload_fill: ColorRect
@@ -101,8 +123,20 @@ func _ready() -> void:
 	_rng.randomize()
 	_level_seed = randi()
 	var payload := SceneRouter.take_payload()
-	_level_index = maxi(int(payload.get("start_level", 1)), 1)
-	_lives = STARTING_LIVES
+	# Snapshot the stock tunables BEFORE any saved-run values overwrite them,
+	# so a reset can always restore the true base loadout.
+	_base_max_ammo = max_ammo
+	_base_reload_cooldown = reload_cooldown
+	_base_recoil_strength = recoil_strength
+	# Resume a saved run only when the menu asked to Continue and one exists;
+	# otherwise this is a brand-new run, which abandons any stale saved run.
+	var mode := String(payload.get("mode", "play"))
+	if mode == "continue" and Profile.has_active_run():
+		_restore_run(Profile.active_run)
+	else:
+		_level_index = maxi(int(payload.get("start_level", 1)), 1)
+		_lives = STARTING_HEALTH
+		Profile.clear_active_run()
 	_ammo = max_ammo
 	_reload_cooldown_left = 0.0
 	_generator = get_node(chunk_generator_path) as ChunkGenerator
@@ -243,18 +277,11 @@ func _setup_hud() -> void:
 	right.custom_minimum_size = Vector2(120, 0)
 	row.add_child(right)
 	_hud_time = _hud_label("0:00", 20, UITheme.TEXT, HORIZONTAL_ALIGNMENT_RIGHT)
-	_hud_lives = HBoxContainer.new()
-	_hud_lives.alignment = BoxContainer.ALIGNMENT_END
-	_hud_lives.add_theme_constant_override("separation", 3)
-	# One label per heart so we can recolour them independently as lives
-	# are lost (red = alive, faded grey = spent).
-	_hud_hearts.clear()
-	for i in STARTING_LIVES:
-		var heart := _hud_label("♥", 16, UITheme.DANGER, HORIZONTAL_ALIGNMENT_CENTER)
-		_hud_hearts.append(heart)
-		_hud_lives.add_child(heart)
+	# Health readout. A single heart + count so it scales cleanly when the
+	# "Heal +2" upgrade pushes health above the starting value.
+	_hud_health = _hud_label("♥ %d" % _lives, 18, UITheme.DANGER, HORIZONTAL_ALIGNMENT_RIGHT)
 	right.add_child(_hud_time)
-	right.add_child(_hud_lives)
+	right.add_child(_hud_health)
 
 	# FPS readout.
 	_fps_label = _hud_label("", 12, Color(0.55, 0.9, 0.65), HORIZONTAL_ALIGNMENT_LEFT)
@@ -322,12 +349,8 @@ func _update_hud() -> void:
 	_hud_depth_fill.color = accent
 	_hud_depth_label.text = "DEPTH %d%%" % int(pct * 100.0)
 	_hud_time.text = _format_time(_run_time)
-	# Light the first _lives hearts red; fade the rest to a spent grey.
-	for i in _hud_hearts.size():
-		var alive := i < _lives
-		var heart := _hud_hearts[i]
-		heart.add_theme_color_override("font_color",
-			UITheme.DANGER if alive else Color(0.32, 0.34, 0.40, 0.55))
+	if _hud_health != null:
+		_hud_health.text = "♥ %d" % maxi(_lives, 0)
 	if _hud_ammo != null:
 		_hud_ammo.text = "AMMO %d / %d" % [_ammo, max_ammo]
 		_hud_ammo.add_theme_color_override("font_color",
@@ -422,6 +445,12 @@ func _spawn_ball_if_needed() -> void:
 	_ball = ball_scene.instantiate() as RigidBody2D
 	_ball.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(_ball)
+	# Remember the ball's stock top speed so the "Speed x1.1" upgrade can scale
+	# from a stable baseline and a run reset can restore it.
+	_base_ball_speed = float(_ball.get("max_speed"))
+	# Re-apply any speed already banked this run (the ball is reused across
+	# levels, but if it was ever rebuilt this keeps the upgrade in effect).
+	_ball.set("max_speed", _base_ball_speed * _speed_mult)
 	if _camera and _camera.has_method("set_target"):
 		_camera.call("set_target", _ball)
 
@@ -458,6 +487,7 @@ func _regenerate_level(advance: bool) -> void:
 		_rng.seed = _level_seed
 		var info: Dictionary = _generator.build_level(_world, _rng, _level_index)
 		var spawn: Vector2 = info.get("spawn_global", Vector2(0, 80))
+		_spawn_global = spawn
 		_level_bottom_y = float(info.get("bottom_y", 4000.0))
 		_level_top_y = spawn.y
 		_spawn_ball_if_needed()
@@ -479,16 +509,75 @@ func _regenerate_level(advance: bool) -> void:
 
 	GameEvents.run_started.emit(_level_index)
 	MusicManager.set_level(_level_index)
+	# Checkpoint the run as the Continue resume point now that the level (and
+	# any upgrades applied before advancing) is live.
+	_save_run_checkpoint()
 
 
-## Restarts the run from the BEGINNING (Retry button / R key / pause-restart).
-## Dying or restarting wipes level progression — the player always returns to
-## level 1 rather than retrying the level they were on, with a fresh layout.
+## Restarts the run from the BEGINNING (R key / pause-restart). A restart is a
+## brand-new run: level progression AND run upgrades/health/score are wiped, so
+## the player always returns to level 1 with a fresh layout and base loadout.
 func _restart_level() -> void:
 	_level_index = 1
 	_level_seed = randi()
 	_deaths_this_level = 0
+	_reset_run_progress()
 	_regenerate_level(false)
+
+
+## Restores every run-based modifier to its base value: health, the upgrade
+## tunables and the accumulated run score. Called when a fresh run begins.
+func _reset_run_progress() -> void:
+	_lives = STARTING_HEALTH
+	_run_score = 0
+	_shot_size_mult = 1.0
+	_shot_damage = 1
+	_speed_mult = 1.0
+	max_ammo = _base_max_ammo
+	reload_cooldown = _base_reload_cooldown
+	recoil_strength = _base_recoil_strength
+	if is_instance_valid(_ball):
+		_ball.set("max_speed", _base_ball_speed)
+
+
+# --- Saved run (Continue) ------------------------------------------------
+# The whole run is checkpointed to Profile at the start of every level, so the
+# player can quit and Continue from there. It is cleared on death and when a
+# new run begins, so the menu only offers Continue while a run is genuinely in
+# progress — never a stale level number after a wipe.
+
+## Serialises the live run state into a plain dict for Profile.
+func _snapshot_run() -> Dictionary:
+	return {
+		"level": _level_index,
+		"health": _lives,
+		"max_ammo": max_ammo,
+		"shot_size_mult": _shot_size_mult,
+		"shot_damage": _shot_damage,
+		"speed_mult": _speed_mult,
+		"reload_cooldown": reload_cooldown,
+		"recoil_strength": recoil_strength,
+		"run_score": _run_score,
+	}
+
+
+## Loads a saved run snapshot back into the live run state. Base tunables must
+## already be captured (see _ready) so a later reset still restores stock.
+func _restore_run(state: Dictionary) -> void:
+	_level_index = maxi(int(state.get("level", 1)), 1)
+	_lives = maxi(int(state.get("health", STARTING_HEALTH)), 1)
+	max_ammo = maxi(int(state.get("max_ammo", _base_max_ammo)), 1)
+	_shot_size_mult = float(state.get("shot_size_mult", 1.0))
+	_shot_damage = maxi(int(state.get("shot_damage", 1)), 1)
+	_speed_mult = float(state.get("speed_mult", 1.0))
+	reload_cooldown = float(state.get("reload_cooldown", _base_reload_cooldown))
+	recoil_strength = float(state.get("recoil_strength", _base_recoil_strength))
+	_run_score = int(state.get("run_score", 0))
+
+
+## Persists the current run as the resume point.
+func _save_run_checkpoint() -> void:
+	Profile.save_active_run(_snapshot_run())
 
 
 func _next_level() -> void:
@@ -562,21 +651,37 @@ func _on_player_died() -> void:
 		return
 	if _is_invuln():
 		return
-	_state = State.RESULTS
 	_deaths_this_level += 1
 	_lives = maxi(_lives - 1, 0)
 	_play_sfx(_sfx_death)
 	_flash(Color(0.85, 0.1, 0.15, 0.55))
+	if _lives > 0:
+		# Non-lethal: spend a health point, then drop the ball back in at the
+		# top of the current level so the run keeps going with its upgrades.
+		_shake(8.0)
+		if is_instance_valid(_ball):
+			VFX.burst(self, _ball.global_position,
+				_world_def.get("hazard", Color(1, 0.3, 0.4)), 14, 200.0, 0.45)
+		_respawn_ball()
+		return
+	# Out of health — the run is over. Drop the saved run so the menu stops
+	# offering Continue, then report the final run score and the high score.
+	_state = State.RESULTS
+	Profile.clear_active_run()
 	if is_instance_valid(_ball):
 		VFX.explode(self, _ball.global_position, _world_def.get("hazard", Color(1, 0.3, 0.4)))
 		_ball.visible = false
 		_ball.freeze = true
-	# Out of lives ends the run and sends the player back to the menu;
-	# otherwise the run can be retried like before.
-	var outcome := "game_over" if _lives <= 0 else "death"
-	var result := _build_result(outcome)
+	var result := _build_result("game_over")
+	var prior_best := int(Profile.stats.get("best_score", 0))
+	var run_total := _run_score + int(result.get("score", 0))
+	result["score"] = run_total
+	result["run_score"] = run_total
+	result["high_score"] = maxi(prior_best, run_total)
+	result["new_best"] = run_total > prior_best
+	# Profile reads result.score to update the persisted best_score.
 	GameEvents.run_ended.emit(result)
-	_show_results(result)
+	_show_game_over(result)
 
 
 func _on_level_completed() -> void:
@@ -589,19 +694,73 @@ func _on_level_completed() -> void:
 		VFX.burst(self, _ball.global_position, _world_def.get("accent", Color(1, 1, 1)), 36, 300.0, 0.8)
 		_ball.freeze = true
 	var result := _build_result("win")
+	# Bank the cleared level's score into the running total for this run.
+	_run_score += int(result.get("score", 0))
 	GameEvents.run_ended.emit(result)
-	_show_results(result)
+	# Every cleared level offers an upgrade draft before advancing.
+	_show_upgrade_select(result)
 
 
-func _show_results(result: Dictionary) -> void:
-	var outcome := String(result.get("outcome", ""))
-	if outcome == "win":
-		_results_primary = Callable(self, "_next_level")
-	elif outcome == "game_over":
-		# No retry — only path out is back to the menu.
-		_results_primary = Callable(self, "_go_to_menu")
-	else:
-		_results_primary = Callable(self, "_restart_level")
+## Drops the ball back at the top of the current level after a non-lethal hit,
+## without rebuilding the level. Re-arms spawn invulnerability so the same
+## hazard can't immediately re-trigger the death.
+func _respawn_ball() -> void:
+	if is_instance_valid(_ball):
+		_ball.visible = true
+		_ball.freeze = false
+		_ball.reset_ball(_spawn_global)
+		_prev_ball_pos = _spawn_global
+	_invuln_until = Time.get_ticks_msec() / 1000.0 + spawn_invuln_seconds
+
+
+# --- Upgrade draft -------------------------------------------------------
+
+## Presents the three-card upgrade draft over the cleared level.
+func _show_upgrade_select(result: Dictionary) -> void:
+	# No keyboard "primary" during a draft — the player must pick a card.
+	_results_primary = Callable()
+	var choices := Upgrades.roll(3)
+	_results = Control.new()
+	_results.set_script(load("res://scripts/ui/upgrade_select.gd"))
+	_canvas.add_child(_results)
+	_results.call("setup", result, choices, Callable(self, "_on_upgrade_chosen"))
+
+
+## Applies the drafted upgrade for the rest of the run, then advances.
+func _on_upgrade_chosen(upgrade: Dictionary) -> void:
+	_apply_upgrade(String(upgrade.get("id", "")))
+	_next_level()
+
+
+## Maps an upgrade id onto the live run state. Multipliers stack across picks.
+func _apply_upgrade(id: String) -> void:
+	match id:
+		"heal":
+			_lives += 2
+		"max_ammo":
+			max_ammo += 1
+			_ammo = mini(_ammo + 1, max_ammo)
+		"speed":
+			_speed_mult *= 1.1
+			if is_instance_valid(_ball):
+				_ball.set("max_speed", _base_ball_speed * _speed_mult)
+		"reload":
+			# Faster reload = shorter cooldown. Floor it so it can't hit zero.
+			reload_cooldown = maxf(reload_cooldown / 1.1, 0.05)
+		"shot_size":
+			_shot_size_mult *= 1.1
+		"recoil":
+			recoil_strength *= 1.1
+		"shot_damage":
+			_shot_damage += 1
+		_:
+			push_warning("GameController: unknown upgrade id '%s'" % id)
+
+
+## Shows the game-over card with the run's final score and the high score,
+## then routes the player back to the main menu.
+func _show_game_over(result: Dictionary) -> void:
+	_results_primary = Callable(self, "_go_to_menu")
 	_results = Control.new()
 	_results.set_script(load("res://scripts/ui/results_overlay.gd"))
 	_canvas.add_child(_results)
@@ -673,6 +832,10 @@ func _spawn_bullet(at_global: Vector2, dir: Vector2) -> void:
 	var bullet := bullet_scene.instantiate() as Area2D
 	if bullet == null:
 		return
+	# Apply run upgrades: scale the whole node (visual + collision) for Shot
+	# Size, and set the per-bullet damage for Shot Damage.
+	bullet.scale = Vector2(_shot_size_mult, _shot_size_mult)
+	bullet.set("damage", _shot_damage)
 	add_child(bullet)
 	bullet.global_position = at_global + dir * 10.0
 	if bullet.has_method("setup"):

@@ -22,6 +22,12 @@ var level_records: Dictionary = {}
 var equipped: Dictionary = {}
 var unlocks: Dictionary = {}
 var last_run_xp: int = 0            ## XP awarded by the most recent run.
+## The in-progress run, if any: a resume snapshot written by the game at the
+## start of each level and cleared on death / new run. Empty = no run to
+## continue, so the menu hides the Continue button. This is run state, NOT a
+## lifetime stat — unlike highest_level_reached it drops back to nothing when
+## the player dies, so Continue never points at a stale level.
+var active_run: Dictionary = {}
 
 var _default_stats := {
 	"total_runs": 0,
@@ -68,6 +74,7 @@ func _load() -> void:
 	equipped = d.get("equipped", {
 		"title": "Newcomer", "ball_skin": "classic", "trail_fx": "classic",
 	})
+	active_run = d.get("active_run", {})
 
 
 ## Re-reads state from disk (used after a progress wipe).
@@ -87,6 +94,7 @@ func save() -> void:
 		"level_records": level_records,
 		"unlocks": unlocks,
 		"equipped": equipped,
+		"active_run": active_run,
 	})
 
 
@@ -177,6 +185,32 @@ func completion_percent() -> float:
 ## Highest level the player may jump straight to from Level Select.
 func highest_unlocked_level() -> int:
 	return clampi(highest_level_reached, 1, TOTAL_LEVELS)
+
+
+# --- Active run (Continue) ------------------------------------------------
+
+## True when there is a run in progress the player can resume.
+func has_active_run() -> bool:
+	return not active_run.is_empty() and int(active_run.get("level", 0)) >= 1
+
+
+## Level the saved run would resume at (1 when there is no saved run).
+func active_run_level() -> int:
+	return maxi(int(active_run.get("level", 1)), 1)
+
+
+## Stores (or overwrites) the resume snapshot for the current run.
+func save_active_run(state: Dictionary) -> void:
+	active_run = state.duplicate(true)
+	save()
+
+
+## Drops the saved run so Continue is no longer offered.
+func clear_active_run() -> void:
+	if active_run.is_empty():
+		return
+	active_run = {}
+	save()
 
 
 func formatted_play_time() -> String:

@@ -53,14 +53,50 @@ titles and cosmetics; the equipped title is shown in the main menu.
 owned — the unlock hook `BallSkins.is_unlocked(id)` always returns true.
 The Ball Skins screen (`scripts/ui/skins_screen.gd`) is the equip UI.
 
+## Run upgrades
+
+Clearing a level opens a three-card draft (`scripts/ui/upgrade_select.gd`).
+`scripts/systems/upgrades.gd` rolls three **distinct** upgrades by rarity
+weight (heavier weight = more common); the player keeps one and it applies
+immediately and persists for the rest of the run. `game_controller.gd`
+owns how each upgrade id is applied and resets every run modifier on death.
+
+| Upgrade            | Weight | Effect                          |
+|--------------------|--------|---------------------------------|
+| Heal +2            | 1.00   | +2 health                       |
+| Max Ammo +1        | 0.80   | +1 magazine capacity            |
+| Shot Size ×1.1     | 0.75   | bullets 10% larger              |
+| Reload Speed ×1.1  | 0.66   | reload 10% faster               |
+| Shot Recoil ×1.1   | 0.66   | recoil kick 10% stronger        |
+| Speed ×1.1         | 0.50   | ball top speed 10% higher       |
+| Shot Damage +1     | 0.10   | +1 bullet damage                |
+
+Health depletes one point per lethal hit; while any remains the ball
+respawns at the top of the current level. At zero health the run ends,
+all run progress (health, upgrades, run score) is wiped and the player
+returns to the menu via a game-over card showing the run score and the
+persistent high score (`Profile.stats.best_score`).
+
+### Continue / saved run
+
+`game_controller.gd` checkpoints the live run to `Profile.active_run` at the
+start of every level (level index + health + ammo + all upgrade modifiers +
+run score). The menu's **Continue** button is shown *only* when
+`Profile.has_active_run()` is true and resumes from that snapshot. The saved
+run is cleared on death and whenever a new game is started (Play), so Continue
+never points at a stale level — unlike the lifetime `highest_level_reached`
+stat, which it deliberately no longer reads.
+
 ## Achievements and daily challenges
 
 - `scripts/systems/achievements.gd` evaluates lifetime milestones
-  against `Profile`'s metrics. They unlock as the metrics tick over.
+  against `Profile`'s metrics. They still unlock and persist silently,
+  but the unlock **notification is intentionally disabled** (the
+  achievements screen was removed) — the `achievement_unlocked` emit in
+  `_evaluate()` is commented out, so no toast fires.
 - `scripts/systems/challenges.gd` regenerates three daily challenges
-  every calendar day. Completion is tracked on `Profile`.
-
-Both fire `Notifier` toasts on unlock.
+  every calendar day. Completion is tracked on `Profile` and still fires
+  a `Notifier` toast.
 
 ## Save data
 

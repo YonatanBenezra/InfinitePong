@@ -42,13 +42,15 @@ func setup(result: Dictionary, on_primary: Callable, on_menu: Callable) -> void:
 	var header := UITheme.make_title(header_text, 34, accent)
 	vb.add_child(header)
 
-	# When a life was just lost (but the run continues), tell the player
-	# how many lives they have left so the count change is legible.
-	if not win:
+	# On game over, lead with whether the run set a new record.
+	if game_over:
+		var record_text := ("NEW HIGH SCORE!" if bool(result.get("new_best", false))
+			else "OUT OF HEALTH")
+		var record_color: Color = UITheme.GOLD if bool(result.get("new_best", false)) else UITheme.TEXT_DIM
+		vb.add_child(UITheme.make_label(record_text, 14, record_color))
+	elif not win:
 		var lives_left := int(result.get("lives", 0))
-		var lives_text := ("OUT OF LIVES" if game_over
-			else "LIVES REMAINING  %d" % lives_left)
-		vb.add_child(UITheme.make_label(lives_text, 13, UITheme.TEXT_DIM))
+		vb.add_child(UITheme.make_label("LIVES REMAINING  %d" % lives_left, 13, UITheme.TEXT_DIM))
 
 	vb.add_child(_divider())
 
@@ -57,16 +59,21 @@ func setup(result: Dictionary, on_primary: Callable, on_menu: Callable) -> void:
 	stats_row.add_theme_constant_override("separation", 24)
 	stats_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(stats_row)
-	stats_row.add_child(_stat("TIME", "%.1fs" % float(result.get("time", 0.0))))
-	if win:
+	if game_over:
+		# The end-of-run summary: this run's total vs the persistent best.
+		stats_row.add_child(_stat("SCORE", _commas(int(result.get("score", 0)))))
+		stats_row.add_child(_stat("HIGH SCORE", _commas(int(result.get("high_score", 0)))))
+	elif win:
+		stats_row.add_child(_stat("TIME", "%.1fs" % float(result.get("time", 0.0))))
 		stats_row.add_child(_stat("SCORE", _commas(int(result.get("score", 0)))))
 	else:
+		stats_row.add_child(_stat("TIME", "%.1fs" % float(result.get("time", 0.0))))
 		stats_row.add_child(_stat("DEPTH", "%d%%" % int(float(result.get("depth_pct", 0.0)) * 100.0)))
 
 	vb.add_child(_divider())
 
 	# Button.
-	var primary_text := "NEXT LEVEL" if win else ("MENU" if game_over else "RETRY")
+	var primary_text := "NEXT LEVEL" if win else ("MAIN MENU" if game_over else "RETRY")
 	var primary := UITheme.make_button(primary_text, accent)
 	primary.custom_minimum_size = Vector2(260, 0)
 	primary.pressed.connect(on_primary)
