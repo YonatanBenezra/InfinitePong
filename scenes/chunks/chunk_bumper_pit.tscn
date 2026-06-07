@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://cchunkbmp1"]
+[gd_scene format=3 uid="uid://cchunkbmp1"]
 
 [ext_resource type="PackedScene" uid="uid://bladespin001" path="res://scenes/hazards/blade.tscn" id="2"]
 
@@ -8,7 +8,6 @@ size = Vector2(80, 500)
 [node name="ChunkBumperPit" type="Node2D" unique_id=2123855278]
 
 [node name="ConnectTop" type="Marker2D" parent="." unique_id=1951563954]
-position = Vector2(0, 0)
 
 [node name="ConnectBottom" type="Marker2D" parent="." unique_id=29621831]
 position = Vector2(0, 500)
@@ -42,5 +41,5 @@ scale = Vector2(2, 2)
 position = Vector2(0, 340)
 scale = Vector2(2, 2)
 
-[node name="BladeBottom" parent="." instance=ExtResource("2")]
+[node name="BladeBottom" parent="." unique_id=1695416858 instance=ExtResource("2")]
 position = Vector2(0, 430)

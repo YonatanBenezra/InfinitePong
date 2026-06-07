@@ -81,14 +81,14 @@ position = Vector2(0, -123.09799)
 [node name="FlipperStandard" parent="." unique_id=78610940 instance=ExtResource("3_4i7vi")]
 position = Vector2(-74, 139)
 scale = Vector2(0.5, 0.5)
-rest_angle_deg = 0.0
-active_angle_deg = -30.0
+rest_angle_deg = 15.0
+active_angle_deg = 5.0
 
 [node name="FlipperStandard2" parent="." unique_id=112050381 instance=ExtResource("3_4i7vi")]
 position = Vector2(-74, 391)
 scale = Vector2(0.5, 0.5)
-rest_angle_deg = 0.0
-active_angle_deg = -30.0
+rest_angle_deg = 15.0
+active_angle_deg = 5.0
 
 [node name="FlipMountRight2" type="Node2D" parent="." unique_id=1054593069]
 position = Vector2(74.5, 269.5)
@@ -96,6 +96,6 @@ rotation = -3.1415923
 scale = Vector2(0.5, 0.5)
 
 [node name="FlipperStandard" parent="FlipMountRight2" unique_id=548429728 instance=ExtResource("3_4i7vi")]
-rest_angle_deg = 0.0
-active_angle_deg = -30.0
+rest_angle_deg = 15.0
+active_angle_deg = 5.0
 mirror = true

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cchunkslide"]
 
 [ext_resource type="PackedScene" uid="uid://bladespin001" path="res://scenes/hazards/blade.tscn" id="1_a76hc"]
+[ext_resource type="Script" uid="uid://bdjw0d2bn46c4" path="res://scripts/chunks/curved_ramp.gd" id="2_aqt7x"]
 
 [sub_resource type="RectangleShape2D" id="Rect_wall_tall"]
 size = Vector2(80, 380)
@@ -52,3 +53,24 @@ shape = SubResource("Rect_nub")
 
 [node name="Blade" parent="." unique_id=1946521368 instance=ExtResource("1_a76hc")]
 position = Vector2(36, 215)
+
+[node name="PipeLeft2" type="StaticBody2D" parent="." unique_id=1261292354]
+position = Vector2(207, 128)
+scale = Vector2(-1, 1)
+collision_mask = 0
+script = ExtResource("2_aqt7x")
+arc_radius = 62.0
+start_angle_deg = 105.0
+end_angle_deg = 183.0
+segment_count = 16
+thickness = 16.0
+
+[node name="PipeLeft" type="StaticBody2D" parent="." unique_id=845423919]
+position = Vector2(-206, 36)
+collision_mask = 0
+script = ExtResource("2_aqt7x")
+arc_radius = 62.0
+start_angle_deg = 105.0
+end_angle_deg = 183.0
+segment_count = 16
+thickness = 16.0

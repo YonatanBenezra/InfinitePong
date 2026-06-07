@@ -7,6 +7,6 @@
 script = ExtResource("1")
 scene = ExtResource("2")
 difficulty = 0
-weight = 0.3
-connection_tags = null
+weight = 0.1
 tags = null
+connection_tags = null

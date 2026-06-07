@@ -18,12 +18,10 @@
 
 [resource]
 script = ExtResource("1")
-min_bumpers_per_run = 2
-max_bumpers_per_run = 3
 min_chunks = 10
 max_chunks = 14
 target_difficulty_budget = 24
 max_pick_attempts_per_slot = 64
-chunk_pool = Array[ExtResource("1_mufwe")]([ExtResource("4_a"), ExtResource("4_b"), ExtResource("4_c"), ExtResource("4_d"), ExtResource("4_e"), ExtResource("4_f"), ExtResource("4_h"), ExtResource("10_k10bq"), ExtResource("4_c"), ExtResource("10_mufwe"), ExtResource("11_k10bq"), ExtResource("12_qvcge")])
+chunk_pool = Array[ExtResource("1_mufwe")]([ExtResource("4_a"), ExtResource("4_b"), ExtResource("4_c"), ExtResource("4_d"), ExtResource("4_e"), ExtResource("4_f"), ExtResource("4_h"), ExtResource("10_k10bq"), ExtResource("10_mufwe"), ExtResource("11_k10bq"), ExtResource("12_qvcge")])
 start_chunk = ExtResource("2_start")
 finale_chunk = ExtResource("3_finale")
