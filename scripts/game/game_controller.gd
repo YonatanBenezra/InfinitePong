@@ -482,27 +482,7 @@ func _regenerate_level(advance: bool) -> void:
 	_reload_cooldown_left = 0.0
 
 	_apply_world_theme()
-
-	if _generator:
-		_rng.seed = _level_seed
-		var info: Dictionary = _generator.build_level(_world, _rng, _level_index)
-		var spawn: Vector2 = info.get("spawn_global", Vector2(0, 80))
-		_spawn_global = spawn
-		_level_bottom_y = float(info.get("bottom_y", 4000.0))
-		_level_top_y = spawn.y
-		_spawn_ball_if_needed()
-		if is_instance_valid(_ball):
-			_ball.visible = true
-			_ball.freeze = false
-			_apply_ball_skin()
-			_ball.reset_ball(spawn)
-			_prev_ball_pos = spawn
-		for chunk_name in info.get("sequence", PackedStringArray()):
-			GameEvents.chunk_discovered.emit(String(chunk_name))
-
-	if _camera and _camera.has_method("set_target") and is_instance_valid(_ball):
-		_camera.call("set_target", _ball)
-	_invuln_until = Time.get_ticks_msec() / 1000.0 + spawn_invuln_seconds
+	_build_level_geometry()
 
 	_hud_level.text = "LEVEL %d" % _level_index
 	_show_controls_hint()
@@ -512,6 +492,40 @@ func _regenerate_level(advance: bool) -> void:
 	# Checkpoint the run as the Continue resume point now that the level (and
 	# any upgrades applied before advancing) is live.
 	_save_run_checkpoint()
+
+
+## Builds (or fully rebuilds) the current level's chunks from the active seed
+## and drops the ball at the spawn. Re-seeding `_rng` with the UNCHANGED
+## `_level_seed` makes the build deterministic, so a rebuild reproduces the
+## level EXACTLY — every destructible hazard comes back, every moving hazard /
+## path mover returns to its origin, and bumpers land in the same slots.
+##
+## Shared by the fresh-level path (_regenerate_level) and the respawn path
+## (_respawn_ball). It deliberately touches ONLY geometry + ball placement —
+## not run metrics, the HUD level text, run_started, or the save checkpoint —
+## so a mid-level respawn can reset the hazards without restarting the run.
+func _build_level_geometry() -> void:
+	if _generator == null:
+		return
+	_rng.seed = _level_seed
+	var info: Dictionary = _generator.build_level(_world, _rng, _level_index)
+	var spawn: Vector2 = info.get("spawn_global", Vector2(0, 80))
+	_spawn_global = spawn
+	_level_bottom_y = float(info.get("bottom_y", 4000.0))
+	_level_top_y = spawn.y
+	_spawn_ball_if_needed()
+	if is_instance_valid(_ball):
+		_ball.visible = true
+		_ball.freeze = false
+		_apply_ball_skin()
+		_ball.reset_ball(spawn)
+		_prev_ball_pos = spawn
+	for chunk_name in info.get("sequence", PackedStringArray()):
+		GameEvents.chunk_discovered.emit(String(chunk_name))
+
+	if _camera and _camera.has_method("set_target") and is_instance_valid(_ball):
+		_camera.call("set_target", _ball)
+	_invuln_until = Time.get_ticks_msec() / 1000.0 + spawn_invuln_seconds
 
 
 ## Restarts the run from the BEGINNING (R key / pause-restart). A restart is a
@@ -701,16 +715,28 @@ func _on_level_completed() -> void:
 	_show_upgrade_select(result)
 
 
-## Drops the ball back at the top of the current level after a non-lethal hit,
-## without rebuilding the level. Re-arms spawn invulnerability so the same
-## hazard can't immediately re-trigger the death.
+## Respawns the player after a non-lethal hit. The whole level is rebuilt from
+## its (unchanged) seed so it looks and behaves exactly as when first entered:
+## destroyed breakables/spikes/blades come back, glue is reset, and every
+## moving hazard / path mover returns to its origin. Without this, hazards the
+## player had already cleared or passed stayed gone, leaving sections empty.
+##
+## The rebuild only restores geometry — run metrics (time, score, ammo, depth)
+## are intentionally preserved, since a respawn continues the run rather than
+## restarting the level. `_build_level_geometry` re-arms spawn invulnerability,
+## so the same hazard can't immediately re-trigger the death.
 func _respawn_ball() -> void:
-	if is_instance_valid(_ball):
-		_ball.visible = true
-		_ball.freeze = false
-		_ball.reset_ball(_spawn_global)
-		_prev_ball_pos = _spawn_global
-	_invuln_until = Time.get_ticks_msec() / 1000.0 + spawn_invuln_seconds
+	_clear_bullets()
+	_build_level_geometry()
+
+
+## Frees any player bullets still in flight. Called on respawn so a shot fired
+## just before death can't survive the rebuild and damage a freshly restored
+## hazard. Bullets are parented to this controller (see _spawn_bullet) and
+## tagged into the "bullet" group so they can be swept in one pass.
+func _clear_bullets() -> void:
+	for bullet in get_tree().get_nodes_in_group("bullet"):
+		bullet.queue_free()
 
 
 # --- Upgrade draft -------------------------------------------------------
@@ -836,6 +862,8 @@ func _spawn_bullet(at_global: Vector2, dir: Vector2) -> void:
 	# Size, and set the per-bullet damage for Shot Damage.
 	bullet.scale = Vector2(_shot_size_mult, _shot_size_mult)
 	bullet.set("damage", _shot_damage)
+	# Tagged so a respawn can sweep every in-flight shot in one pass.
+	bullet.add_to_group("bullet")
 	add_child(bullet)
 	bullet.global_position = at_global + dir * 10.0
 	if bullet.has_method("setup"):
